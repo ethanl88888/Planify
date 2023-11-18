@@ -1,27 +1,29 @@
 import React, { useState } from 'react';
-import Bar from './components/Bar';
-import './css/Login.css';
+import { Button, Flex, Heading, Input, Text } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = () => {
     const storedToken = localStorage.getItem('token');
 
     if (storedToken) {
-      console.error('Already logged in');
-      // Handle already logged in state (redirect, display message, etc.)
+      setError('Already logged in');
       return;
     }
 
-    // Validate inputs
     if (!email || !password) {
-      alert('Please fill in all fields.');
+      setError('Please fill in all fields.');
       return;
     }
 
-    // Make POST request to localhost:3003/login
+    setIsLoading(true);
+
     fetch('http://localhost:3003/login', {
       method: 'POST',
       headers: {
@@ -31,38 +33,55 @@ function Login() {
     })
       .then((response) => response.json())
       .then((data) => {
-        // Handle the response from the server
         if (data.token) {
-          // Save the token locally
           localStorage.setItem('token', data.token);
           console.log('Token saved locally:', data.token);
+
+          // Redirect to the home page upon successful login
+          navigate('/');
         } else {
-          console.error('Token not received from the server');
+          setError('Token not received from the server');
         }
       })
       .catch((error) => {
-        console.error('Error:', error);
+        setError(`Error: ${error.message}`);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   };
 
   return (
-    <>
-      <Bar />
-      <div id="login">
-        <div className="auth-item">
-          <label>Email</label>
-          <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="auth-item">
-          <label>Password</label>
-          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
-
-        <button onClick={handleSubmit}>Submit</button>
-      </div>
-    </>
+    <Flex height="100vh" alignItems="center" justifyContent="center">
+      <Flex direction="column" background="gray.100" border="3px solid #f4dbd6" p={12} rounded={6}>
+        <Heading mb={6}>Log in</Heading>
+        <Input
+          placeholder="Email"
+          variant="filled"
+          mb={3}
+          type="email"
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Input
+          placeholder="Password"
+          variant="filled"
+          mb={6}
+          type="password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && <Text color="red.500">{error}</Text>}
+        <Button
+          mb={6}
+          colorScheme="orange"
+          onClick={handleSubmit}
+          isLoading={isLoading}
+          loadingText="Logging in..."
+        >
+          Log in
+        </Button>
+      </Flex>
+    </Flex>
   );
 }
 
-export default Login
-
+export default Login;

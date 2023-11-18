@@ -5,6 +5,7 @@ import {
 import Home from './Home';
 import Login from './Login';
 import Signup from './Signup';
+import { ChakraProvider } from '@chakra-ui/react'
 
 function App() {
   const router = createBrowserRouter([
@@ -28,7 +29,9 @@ function App() {
 
   return (
     <>
-      <RouterProvider router={router} />
+      <ChakraProvider>
+        <RouterProvider router={router} />
+      </ChakraProvider>
     </>
   );
 }
