@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Bar from './components/Bar';
+import './css/Signup.css';
 
 function Signup() {
   const [username, setUsername] = useState('');
@@ -30,22 +32,25 @@ function Signup() {
   };
 
   return (
-    <div id="signup">
-      <div className="auth-item">
-        <label>Username</label>
-        <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-      </div>
-      <div className="auth-item">
-        <label>Email</label>
-        <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      </div>
-      <div className="auth-item">
-        <label>Password</label>
-        <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      </div>
+    <>
+      <Bar />
+      <div id="signup">
+        <div className="auth-item">
+          <label>Username</label>
+          <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+        </div>
+        <div className="auth-item">
+          <label>Email</label>
+          <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="auth-item">
+          <label>Password</label>
+          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
 
-      <button onClick={handleSubmit}>Submit</button>
-    </div>
+        <button onClick={handleSubmit}>Submit</button>
+      </div>
+    </>
   );
 }
 

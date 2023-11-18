@@ -1,10 +1,12 @@
 import icon from '/planify-icon.png';
+import { useNavigate } from 'react-router-dom';
 import '../css/Bar.css';
 
 function Bar() {
-  const handleLogout = () => {
-    const storedToken = localStorage.getItem('token');
+  const storedToken = localStorage.getItem('token');
+  const navigate = useNavigate();
 
+  const handleLogout = () => {
     if (!storedToken) {
       console.error('Error logging out');
       return;
@@ -22,6 +24,8 @@ function Bar() {
       .then((data) => {
         localStorage.removeItem('token');
         console.log(data);
+
+        navigate('/');
       })
       .catch((error) => {
         console.error('Error:', error);
@@ -30,16 +34,24 @@ function Bar() {
 
   return (
     <div id="bar">
-      <a href="/" id="bar-logo">
-        <img src={icon} alt="Planify Icon" /> 
-        <h1>Planify</h1>
-      </a>
-      <div id="white-space" />
-      <div id="bar-links">
-        <a href="/login">Login</a>
-        <a href="/signup">Signup</a>
-        <a onClick={handleLogout}>Logout</a>
+      <div className="white-space" />
+      <div id="contents">
+        <a href="/" id="bar-logo">
+          <img src={icon} alt="Planify Icon" /> 
+          <h1>Planify</h1>
+        </a>
+        {storedToken && <a href="/my-plans" id="my-plans" className="bar-button">My Plans</a>}
+        <div id="bar-right">
+          {!storedToken && (
+            <>
+              <a href="/login" className="bar-button">Login</a>
+              <a href="/signup" className="bar-button">Signup</a>
+            </>
+          )}
+          {storedToken && <a onClick={handleLogout} className="bar-button">Logout</a>}
+        </div>
       </div>
+      <div className="white-space" />
     </div>
   );
 }

@@ -4,7 +4,7 @@
   /* font-weight: 400; */
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  color: black;
   background-color: white;
 
   font-synthesis: none;
@@ -25,10 +25,11 @@
 
 body {
   margin: 0;
-/*   display: flex; */
-/*   place-items: center; */
-/*   min-width: 320px; */
-/*   min-height: 100vh; */
+  /* display: flex; */
+  /* flex-direction: column; */
+  /* place-items: center; */
+  /* min-width: 320px; */
+  /* min-height: 100vh; */
 }
 
 /* h1 { */

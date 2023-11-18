@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Bar from './components/Bar';
+import './css/Login.css';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -44,18 +46,21 @@ function Login() {
   };
 
   return (
-    <div id="signup">
-      <div className="auth-item">
-        <label>Email</label>
-        <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      </div>
-      <div className="auth-item">
-        <label>Password</label>
-        <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      </div>
+    <>
+      <Bar />
+      <div id="login">
+        <div className="auth-item">
+          <label>Email</label>
+          <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="auth-item">
+          <label>Password</label>
+          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
 
-      <button onClick={handleSubmit}>Submit</button>
-    </div>
+        <button onClick={handleSubmit}>Submit</button>
+      </div>
+    </>
   );
 }
 
