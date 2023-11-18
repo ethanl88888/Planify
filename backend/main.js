@@ -35,9 +35,9 @@ db.run('CREATE TABLE IF NOT EXISTS session_tokens (id INTEGER PRIMARY KEY AUTOIN
 
 // allow log in with email and password
 app.post('/login', express.json(), (req, res) => {
-  const email = req.body.email || req.query.email;
-  const password = req.body.password || req.query.password;
-  //const { email, password } = req.body;
+  // const email = req.query.email;
+  // const password = req.query.password;
+  const { email, password } = req.body;
   const sql = 'SELECT * FROM users WHERE email = ? AND password = ?';
   db.get(sql, [email, password], (err, row) => {
     if (err) {
@@ -59,10 +59,10 @@ app.post('/login', express.json(), (req, res) => {
 
 // allow sign up with name, email, and password
 app.post('/signup', express.json(), (req, res) => {
-  const username = req.body.username || req.query.username;
-  const email = req.body.email || req.query.email;
-  const password = req.body.password || req.query.password;
-  // const { username, email, password } = req.body;
+  // const username = req.query.username;
+  // const email = req.query.email;
+  // const password = req.query.password;
+  const { username, email, password } = req.body;
   const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
   db.run(sql, [username, email, password], (err) => {
     if (err) {

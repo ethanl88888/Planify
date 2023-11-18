@@ -1,129 +1,106 @@
-import { Box, Flex, Heading, Image, Link } from '@chakra-ui/react';
-import icon from '/planify-icon.png';
+import { Box, Flex, Text, Heading, Link } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+import icon from '/planify-icon.png';
 
 function Bar() {
   const storedToken = localStorage.getItem('token');
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    console.log('Logout button clicked');
-  
+  const handleLogout = () => {
     if (!storedToken) {
       console.error('Error logging out');
       return;
     }
-  
-    try {
-      // Make POST request to localhost:3003/logout
-      const response = await fetch('http://localhost:3003/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token: storedToken }),
-      });
-  
-      const data = await response.json();
-  
-      localStorage.removeItem('token');
-      console.log(data);
-  
-      // Navigate only if the logout is successful
-      if (response.ok) {
+
+    // Make POST request to localhost:3003/logout
+    fetch('http://localhost:3003/logout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: storedToken }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        localStorage.removeItem('token');
+        console.log(data);
+
         navigate('/');
-      } else {
-        console.error('Logout failed');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  };
+
+  const buttonStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    color: '#4c4f69',
+    paddingX: '20px',
+    textDecoration: 'none',
+    fontSize: '130%',
+    _hover: {
+      backgroundColor: 'rgba(169, 169, 169, 0.2)',
+      cursor: 'pointer',
+    },
   };
 
   return (
     <Flex
-      as="header"
-      align="center"
-      justify="space-between"
+      id="bar"
       width="100%"
       height="7%"
+      justifyContent="space-between"
+      borderBottom="1px solid #6c6f85"
       position="fixed"
-      borderBottom="3px solid #fec287"
-      p="0"
+      backgroundColor="white"
+      zIndex={100}
     >
-      <Link
-        href="/"
-        textDecoration="none"
-        height="100%"
-        px="2"
-        py="1"
-        display="flex"
-        alignItems="center"
-      >
-        <Image src={icon} alt="Planify Icon" boxSize="4rem" mr="2" ml="330px"/>
-        <Heading fontSize="3xl" color="#f49542">
-          Planify
-        </Heading>
-      </Link>
-      <Box width="20%" />
-      <Flex
-        align="center"
-        height="100%"
-        width="20%"
-        color="black"
-        fontSize="sm"
-      >
-        <Link
-          href="/login"
-          textDecoration="none"
-          height="100%"
-          px="2"
-          py="1"
-          display="flex"
-          alignItems="center"
-          color="#f49542"
-          _hover={{ cursor: 'pointer', background: 'rgba(169, 169, 169, 0.2)' }}
-          onClick={() => {
-            // Handle login logic
-          }}
-        >
-          Login
-        </Link>
-        <Link
-          href="/signup"
-          textDecoration="none"
-          height="100%"
-          px="2"
-          py="1"
-          display="flex"
-          alignItems="center"
-          color="#f49542"
-          _hover={{ cursor: 'pointer', background: 'rgba(169, 169, 169, 0.2)' }}
-          onClick={() => {
-            // Handle signup logic
-          }}
-        >
-          Signup
+      <Box width="15%" className="white-space" />
+      <Flex id="contents" width="1100px" justifyContent="space-between" flexShrink={0}>
+        <Link id="bar-logo" textDecoration="none" display="flex" maxWidth="min-content" _hover={{ textDecoration: "none" }} href="/">
+          <img src={icon} alt="Planify Icon" />
+          <Heading fontSize="200%" color="#209fb5" ml="2" display="flex" flexDirection="column" justifyContent="center">
+            Planify
+          </Heading>
         </Link>
         {storedToken && (
           <Link
-            href="/"
+            href="/my-plans"
+            id="my-plans"
+            className="bar-button"
+            color="#4c4f69"
+            paddingX="20px"
+            paddingY="10px"
             textDecoration="none"
-            height="100%"
-            px="2"
-            py="1"
-            display="flex"
-            alignItems="center"
-            color="#f49542"
-            _hover={{ cursor: 'pointer', background: 'rgba(169, 169, 169, 0.2)' }}
-            onClick={handleLogout}
+            _hover={{ backgroundColor: 'rgba(169, 169, 169, 0.2)', cursor: 'pointer' }}
           >
-            Logout
+            My Plans
           </Link>
         )}
+        <Flex id="bar-right" flexDirection="row-reverse" color="#4c4f69" justifyContent="space-between">
+          {!storedToken && (
+            <>
+              <Link href="/login" className="bar-button" {...buttonStyle}>
+                Login
+              </Link>
+              <Link href="/signup" className="bar-button" {...buttonStyle}>
+                Signup
+              </Link>
+            </>
+          )}
+          {storedToken && (
+            <Text onClick={handleLogout} className="bar-button" {...buttonStyle}>
+              Logout
+            </Text>
+          )}
+        </Flex>
       </Flex>
+      <Box width="15%" className="white-space" />
     </Flex>
   );
 }
 
 export default Bar;
+
