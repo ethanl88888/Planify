@@ -66,16 +66,7 @@ function Bar() {
           </Heading>
         </Link>
         {storedToken && (
-          <Link
-            href="/my-plans"
-            id="my-plans"
-            className="bar-button"
-            color="#4c4f69"
-            paddingX="20px"
-            paddingY="10px"
-            textDecoration="none"
-            _hover={{ backgroundColor: 'rgba(169, 169, 169, 0.2)', cursor: 'pointer' }}
-          >
+          <Link href="/my-plans" id="my-plans" className="bar-button" {...buttonStyle}>
             My Plans
           </Link>
         )}
