@@ -1,3 +1,6 @@
+import icon from '/planify-icon.png';
+import '../css/Bar.css';
+
 function Bar() {
   const handleLogout = () => {
     const storedToken = localStorage.getItem('token');
@@ -27,12 +30,19 @@ function Bar() {
 
   return (
     <div id="bar">
-      <img src="https://drive.google.com/uc?export=view&id=1OxlfehxFOvo0FpoH_cuXryDUQuRdWyUt" /> 
-      <a href="/login">Login</a>
-      <a href="/signup">Signup</a>
-      <a onClick={handleLogout}>Logout</a>
+      <a href="/" id="bar-logo">
+        <img src={icon} alt="Planify Icon" /> 
+        <h1>Planify</h1>
+      </a>
+      <div id="white-space" />
+      <div id="bar-links">
+        <a href="/login">Login</a>
+        <a href="/signup">Signup</a>
+        <a onClick={handleLogout}>Logout</a>
+      </div>
     </div>
   );
 }
 
 export default Bar;
+

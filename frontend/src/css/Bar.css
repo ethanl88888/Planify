@@ -1,0 +1,55 @@
+#bar {
+  display: flex;
+  width: 100%;
+  height: 7%;
+  position: fixed;
+  justify-content: space-between;
+  border-bottom: 1px solid #f4dbd6;
+}
+
+#bar #bar-logo {
+  width: 0;
+  margin-left: 20%;
+  display: flex;
+  text-decoration: none;
+}
+
+#bar #bar-logo > * {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#bar #bar-logo h1 {
+  font-size: 200%;
+  color: black;
+}
+
+#bar #white-space {
+  margin: 17%;
+}
+
+#bar #bar-links {
+  margin-right: 20%;
+  display: flex;
+  flex-direction: row-reverse;
+  color: black;
+  justify-content: space-between;
+}
+
+#bar #bar-links a {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: black;
+  padding-left: 20%;
+  padding-right: 20%;
+}
+
+
+#bar #bar-links a:hover {
+  cursor: pointer;
+  /* background: rgba(255, 255, 255, 0.2); */
+  background: rgba(169, 169, 169, 0.2);
+}
