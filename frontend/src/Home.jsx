@@ -1,17 +1,10 @@
-import React from "react";
-import Bar from "./components/Bar";
+import React from 'react';
+import Bar from './components/Bar';
 import home_cover from '/home_cover.jpg';
 import { Box, Flex, Heading, Image, Link, Text } from '@chakra-ui/react';
-
-
+import LocationInput from './components/LocationInput';
 
 function Home() {
-  // React.useEffect(() => {
-  //   fetch("http://localhost:3003")
-  //     .then((res) => res.json())
-  //     .then((data) => setData(data.message));
-  // }, []);
-
   return (
     <div id="home">
       <Box position="relative" zIndex="1">
@@ -36,12 +29,11 @@ function Home() {
             </Box>
           </Flex>
           <Box id="home-main-right" margin="7%" width="30%" border="3px solid #fec287" borderRadius="18px">
-            {/* Content for the right side */}
+            <LocationInput />
           </Box>
         </Flex>
       </Box>
-  </div>
-  
+    </div>
   );
 }
 
