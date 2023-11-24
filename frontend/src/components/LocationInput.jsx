@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Autosuggest from 'react-autosuggest';
-import { Box, Flex, Input } from '@chakra-ui/react';
+import { Box, Flex, Input, InputGroup, InputLeftElement, List, ListItem } from '@chakra-ui/react';
+import { SearchIcon } from '@chakra-ui/icons';
 import _, { debounce } from 'lodash';
 
 const locationiqKey = import.meta.env.VITE_LOCATIONIQ_API_KEY;
-
-/* --------------- */
-/*    Component    */
-/* --------------- */
 
 function getSuggestionValue(suggestion) {
   return suggestion.name;
 }
 
 function renderSuggestion(suggestion) {
+  console.log(suggestion.name)
   return (
-    <span>{suggestion.name}</span>
+    <ListItem
+      boxShadow="0 1px 5px rgba(0, 0, 0, 0.65)"
+      borderRadius="4px"
+      styleType="none"
+    >{suggestion.name}</ListItem>
   );
 }
 
@@ -29,7 +31,7 @@ class LocationInput extends React.Component {
       isLoading: false
     };
 
-    this.debouncedLoadSuggestions = _.debounce(this.loadSuggestions, 2000);
+    this.debouncedLoadSuggestions = _.debounce(this.loadSuggestions, 1500);
   }
   
   async loadSuggestions(value) {
@@ -96,13 +98,29 @@ class LocationInput extends React.Component {
         <div className="status">
           <strong>Status (for debugging):</strong> {status}
         </div>
-        <Autosuggest 
-          suggestions={suggestions}
-          onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-          onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-          getSuggestionValue={getSuggestionValue}
-          renderSuggestion={renderSuggestion}
-          inputProps={inputProps} />
+      <Autosuggest
+        suggestions={suggestions}
+        onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+        onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+        getSuggestionValue={getSuggestionValue}
+        renderSuggestion={renderSuggestion}
+        inputProps={inputProps}
+        renderInputComponent={(inputProps) => 
+            <InputGroup>
+              <InputLeftElement><SearchIcon /></InputLeftElement>
+              <Input {...inputProps}
+                boxShadow="0 1px 5px rgba(0, 0, 0, 0.65)"
+                borderRadius="4px"
+                width="280px"
+              />
+            </InputGroup>
+          }
+        renderSuggestionsContainer={({ containerProps, children }) => (
+          <Box {...containerProps} position="absolute" zIndex="1">
+            <List styleType={"none"}>{children}</List>
+          </Box>
+        )}
+      />
       </div>
     );
   }
