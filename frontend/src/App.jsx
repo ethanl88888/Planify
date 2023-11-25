@@ -5,6 +5,7 @@ import {
 import Home from './Home';
 import Login from './Login';
 import Signup from './Signup';
+import MyPlans from './Plans';
 import { ChakraProvider } from '@chakra-ui/react'
 
 function App() {
@@ -20,6 +21,10 @@ function App() {
     {
       path: '/signup',
       element: <Signup/>
+    },
+    {
+      path: '/myplans',
+      element: <MyPlans/>
     }
     // {
     //   path: '/plan/:id',

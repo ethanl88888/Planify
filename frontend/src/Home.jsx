@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios'; // Import axios
 import Bar from './components/Bar';
 import home_cover from '/home_cover.jpg';
 import {
@@ -14,7 +15,6 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Select,
-  Checkbox,
 } from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
 
@@ -38,13 +38,10 @@ const activitiesOptions = [
   'Amusement parks',
   'Nightlife',
   'Camping',
-]
+];
 
 function Home() {
-  const [destinations, setDestinations] = useState([
-    { id: 1, isVisible: true },
-  ]);
-
+  const [destinations, setDestinations] = useState([{ id: 1, isVisible: true }]);
   const [selectedActivities, setSelectedActivities] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -76,6 +73,42 @@ function Home() {
     } else {
       setSelectedActivities([activity, ...selectedActivities]);
     }
+  };
+
+  const handleSubmit = () => {
+    // Gather destination information
+    const destinationsData = destinations.map((dest) => ({
+      value: dest.value,
+      dateVisiting: dest.dateVisiting,
+    }));
+  
+    // Gather other information
+    const firstDay = document.getElementById('firstDay').value;
+    const lastDay = document.getElementById('lastDay').value;
+    const budget = document.getElementById('budget').value;
+    const people = document.getElementById('numPeople').value;
+  
+    // Construct the data object to send to the server
+    const data = {
+      destinations: destinationsData,
+      firstDay,
+      lastDay,
+      budget,
+      people,
+      activities: selectedActivities,
+    };
+  
+    // Make a POST request to the server
+    axios
+      .post('http://localhost:3003/create-itinerary', data)
+      .then((response) => {
+        console.log(response.data); // Log the server response
+        // Handle any additional logic or UI updates as needed
+      })
+      .catch((error) => {
+        console.error('Error submitting itinerary:', error);
+        // Handle errors or display an error message to the user
+      });
   };
 
   return (
@@ -163,6 +196,9 @@ function Home() {
                   </option>
                 ))}
               </Select>
+            </Flex>
+            <Flex flexDirection="row" id="submit-button" justifyContent="center" mt="4">
+              <button onClick={handleSubmit}>Submit Itinerary</button>
             </Flex>
           </Flex>
         </Flex>

@@ -66,7 +66,7 @@ function Bar() {
           </Heading>
         </Link>
         {storedToken && (
-          <Link href="/my-plans" id="my-plans" className="bar-button" {...buttonStyle}>
+          <Link href="/myplans" id="my-plans" className="bar-button" {...buttonStyle}>
             My Plans
           </Link>
         )}
