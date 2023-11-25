@@ -95,9 +95,9 @@ class LocationInput extends React.Component {
 
     return (
       <div>
-        <div className="status">
-          <strong>Status (for debugging):</strong> {status}
-        </div>
+        {/* <div className="status"> */}
+        {/*   <strong>Status (for debugging):</strong> {status} */}
+        {/* </div> */}
       <Autosuggest
         suggestions={suggestions}
         onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}

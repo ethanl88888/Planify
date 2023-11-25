@@ -1,10 +1,83 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Bar from './components/Bar';
 import home_cover from '/home_cover.jpg';
-import { Box, Flex, Heading, Image, Link, Text } from '@chakra-ui/react';
+import {
+  Box,
+  Flex,
+  Heading,
+  Image,
+  Text,
+  Input,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Select,
+  Checkbox,
+} from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
 
+const activitiesOptions = [
+  'Sightseeing',
+  'Hiking',
+  'Beach',
+  'Water-based activities',
+  'Cultural experiences',
+  'Historical exploration',
+  'Shopping',
+  'Culinary tours',
+  'Relaxation and spa',
+  'Photography',
+  'Festivals and events',
+  'Snow-based activities',
+  'Road trips',
+  'Cruises',
+  'Wine tours',
+  'Volunteering',
+  'Amusement parks',
+  'Nightlife',
+  'Camping',
+]
+
 function Home() {
+  const [destinations, setDestinations] = useState([
+    { id: 1, isVisible: true },
+  ]);
+
+  const [selectedActivities, setSelectedActivities] = useState([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleDestinationChange = (index, value) => {
+    const newDestinations = [...destinations];
+    newDestinations[index] = { id: index + 1, value, isVisible: true };
+    setDestinations(newDestinations);
+  };
+
+  const handleRemoveDestination = (index) => {
+    if (destinations.length > 1) {
+      const newDestinations = [...destinations];
+      newDestinations.splice(index, 1);
+      setDestinations(newDestinations);
+    }
+  };
+
+  const handleAddDestination = () => {
+    setDestinations([...destinations, { id: destinations.length + 1, isVisible: true }]);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleActivityChange = (activity) => {
+    if (selectedActivities.includes(activity)) {
+      setSelectedActivities(selectedActivities.filter((selected) => selected !== activity));
+    } else {
+      setSelectedActivities([activity, ...selectedActivities]);
+    }
+  };
+
   return (
     <div id="home">
       <Box position="relative" zIndex="1">
@@ -28,9 +101,70 @@ function Home() {
               </Heading>
             </Box>
           </Flex>
-          <Box id="home-main-right" margin="7%" width="30%" border="3px solid #fec287" borderRadius="18px">
-            <LocationInput />
-          </Box>
+          <Flex id="home-main-right" margin="7%" width="30%" border="3px solid #fec287" borderRadius="18px" flexDirection="column">
+            {destinations.map((destination, index) => (
+              <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row">
+                <LocationInput onChange={(value) => handleDestinationChange(index, value)} />
+                <Flex flexDirection="column">
+                  <Text>Date visiting (optional)</Text>
+                  <Input type="date" />
+                </Flex>
+                {destinations.length > 1 && (
+                  <Box>
+                    <button onClick={() => handleRemoveDestination(index)}>Remove</button>
+                  </Box>
+                )}
+              </Flex>
+            ))}
+            <Box>
+              <button onClick={handleAddDestination}>Add Destination</button>
+            </Box>
+            <Flex flexDirection="row" id="dates-input">
+              <Flex flexDirection="column">
+                <Text>First Day</Text>
+                <Input placeholder="First Day" type="date" />
+              </Flex>
+              <Flex flexDirection="column">
+                <Text>Last Day</Text>
+                <Input placeholder="Last Day" type="date" />
+              </Flex>
+            </Flex>
+            <Flex id="budget-input" flexDirection="column">
+              <Text>Budget</Text>
+              <NumberInput min={0}>
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </Flex>
+            <Flex id="num-people-input" flexDirection="column">
+              <Text>Number of People</Text>
+              <NumberInput min={0}>
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </Flex>
+            <Flex flexDirection="row" id="activities-dropdown">
+              <Select
+                placeholder={selectedActivities.length > 0 ? selectedActivities.join(', ') : 'Select activities'}
+                value={selectedActivities.join(', ')}
+                onChange={(e) => handleActivityChange(e.target.value)}
+                onClick={toggleDropdown}
+                isOpen={isDropdownOpen}
+              >
+                {activitiesOptions.map((activity) => (
+                  <option key={activity} value={activity}>
+                    {activity}
+                  </option>
+                ))}
+              </Select>
+            </Flex>
+          </Flex>
         </Flex>
       </Box>
     </div>
