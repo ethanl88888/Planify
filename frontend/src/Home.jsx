@@ -1,10 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Bar from './components/Bar';
 import home_cover from '/home_cover.jpg';
-import { Box, Flex, Heading, Image, Link, Text } from '@chakra-ui/react';
+import { Box, Flex, Heading, Image, Button, Text, Input } from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
 
 function Home() {
+  const [userData, setUserData] = useState({
+    destination: '',
+    days: '',
+    budget: '',
+    people: '',
+    activities: '',
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUserData({ ...userData, [name]: value });
+  };
+
+  const handleSubmit = () => {
+    // You can use userData for further processing, such as sending it to an API or storing it in the component's state.
+    console.log(userData);
+  };
+
   return (
     <div id="home">
       <Box position="relative" zIndex="1">
@@ -30,6 +48,42 @@ function Home() {
           </Flex>
           <Box id="home-main-right" margin="7%" width="30%" border="3px solid #fec287" borderRadius="18px">
             <LocationInput />
+            <Input
+              type="text"
+              name="destination"
+              placeholder="Destination"
+              value={userData.destination}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="number"
+              name="days"
+              placeholder="Number of Days"
+              value={userData.days}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="number"
+              name="budget"
+              placeholder="Budget"
+              value={userData.budget}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="number"
+              name="people"
+              placeholder="Number of People"
+              value={userData.people}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="text"
+              name="activities"
+              placeholder="Activities (comma-separated)"
+              value={userData.activities}
+              onChange={handleInputChange}
+            />
+            <Button onClick={handleSubmit}>Submit</Button>
           </Box>
         </Flex>
       </Box>
