@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import React, { useState } from 'react';
 import Bar from './components/Bar';
 import home_cover from '/home_cover.jpg';
 import { Box, Flex, Heading, Image, Button, Text, Input } from '@chakra-ui/react';
