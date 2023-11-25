@@ -41,13 +41,17 @@ const activitiesOptions = [
 ];
 
 function Home() {
-  const [destinations, setDestinations] = useState([{ id: 1, isVisible: true }]);
+  const [destinations, setDestinations] = useState([{ id: 1, value: '', dateVisiting: '' }]);
   const [selectedActivities, setSelectedActivities] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [firstDay, setFirstDay] = useState('');
+  const [lastDay, setLastDay] = useState('');
+  const [budget, setBudget] = useState('');
+  const [numPeople, setNumPeople] = useState('');
 
   const handleDestinationChange = (index, value) => {
     const newDestinations = [...destinations];
-    newDestinations[index] = { id: index + 1, value, isVisible: true };
+    newDestinations[index] = { id: index + 1, value, dateVisiting: '' };
     setDestinations(newDestinations);
   };
 
@@ -60,7 +64,7 @@ function Home() {
   };
 
   const handleAddDestination = () => {
-    setDestinations([...destinations, { id: destinations.length + 1, isVisible: true }]);
+    setDestinations([...destinations, { id: destinations.length + 1, value: '', dateVisiting: '' }]);
   };
 
   const toggleDropdown = () => {
@@ -76,40 +80,54 @@ function Home() {
   };
 
   const handleSubmit = () => {
-    // Gather destination information
-    const destinationsData = destinations.map((dest) => ({
-      value: dest.value,
-      dateVisiting: dest.dateVisiting,
-    }));
+    try {
+      // Gather destination information
+      const destinationsData = destinations.map((dest) => ({
+        destination: dest.value,
+        dateVisiting: dest.dateVisiting,
+      }));
   
-    // Gather other information
-    const firstDay = document.getElementById('firstDay').value;
-    const lastDay = document.getElementById('lastDay').value;
-    const budget = document.getElementById('budget').value;
-    const people = document.getElementById('numPeople').value;
+      // Gather other information
+      const firstDayElement = document.getElementById('firstDay');
+      const lastDayElement = document.getElementById('lastDay');
+      const budgetElement = document.getElementById('budget');
+      const numPeopleElement = document.getElementById('numPeople');
   
-    // Construct the data object to send to the server
-    const data = {
-      destinations: destinationsData,
-      firstDay,
-      lastDay,
-      budget,
-      people,
-      activities: selectedActivities,
-    };
+      const firstDay = firstDayElement ? firstDayElement.value : '';
+      const lastDay = lastDayElement ? lastDayElement.value : '';
+      const budget = budgetElement ? budgetElement.value : '';
+      const people = numPeopleElement ? numPeopleElement.value : '';
   
-    // Make a POST request to the server
-    axios
-      .post('http://localhost:3003/create-itinerary', data)
-      .then((response) => {
-        console.log(response.data); // Log the server response
-        // Handle any additional logic or UI updates as needed
-      })
-      .catch((error) => {
-        console.error('Error submitting itinerary:', error);
-        // Handle errors or display an error message to the user
-      });
+      // Construct the data object to send to the server
+      const data = {
+        token: localStorage.getItem('token'),
+        destinations: destinationsData,
+        firstDay,
+        lastDay,
+        budget,
+        people,
+        activities: selectedActivities,
+      };
+  
+      console.log('Sending data:', data); // Log the data being sent
+  
+      // Make a POST request to the server
+      axios
+        .post('http://localhost:3003/create-itinerary', data)
+        .then((response) => {
+          console.log('Server response:', response.data); // Log the server response
+          // Handle any additional logic or UI updates as needed
+        })
+        .catch((error) => {
+          console.error('Error submitting itinerary:', error);
+          // Handle errors or display an error message to the user
+        });
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
+    }
   };
+  
+  
 
   return (
     <div id="home">
