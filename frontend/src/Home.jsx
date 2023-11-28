@@ -132,14 +132,14 @@ function Home() {
   return (
     <div id="home">
       <Flex direction="column" align="center">
-        <Box position="relative" zIndex="1" width="100%" p={4}>
+        <Box position="relative" zIndex="1" width="100%">
           <Bar />
         </Box>
-        <Heading textAlign="center" color="#209fb5" fontSize="55px" mt={50}>
+        <Heading textAlign="center" color="#209fb5" fontSize="55px" mt={79}>
           Let's Plan Your Next Trip.
         </Heading>
       </Flex>
-      <Box id="home-container" position="absolute" top="70%" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
+      <Box id="home-container" position="absolute" top="40%" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
         <Flex id="home-main" flexDirection="row" maxHeight="80%">
           <Flex
             id="home-main-left"
