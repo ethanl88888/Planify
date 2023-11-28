@@ -131,32 +131,33 @@ function Home() {
 
   return (
     <div id="home">
-      <Box position="relative" zIndex="1">
-        <Bar />
-      </Box>
-      <Box id="home-container" position="absolute" top="7%" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
+      <Flex direction="column" align="center">
+        <Box position="relative" zIndex="1" width="100%" p={4}>
+          <Bar />
+        </Box>
+        <Heading textAlign="center" color="#209fb5" fontSize="55px" mt={50}>
+          Let's Plan Your Next Trip.
+        </Heading>
+      </Flex>
+      <Box id="home-container" position="absolute" top="70%" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
         <Flex id="home-main" flexDirection="row" maxHeight="80%">
           <Flex
             id="home-main-left"
             position="relative"
             flexDirection="column"
             width="60%"
-            max-height="30%"
+            max-height="40%"
             alignItems="center"
             justifyContent="center"
+            margin-top = "-50px"
           >
-            <Image src={home_cover} alt="Home Cover Image" boxSize="100%" objectFit="cover" height="88%" objectPosition="0 90%" zIndex="-1" />
-            <Box position="absolute" top="17%" left="50%" transform="translate(-50%, -50%)">
-              <Heading textAlign="center" color="#f49542" fontSize="55px">
-                Let's Plan <br /> Your Next Trip.
-              </Heading>
-            </Box>
+            <Image src={home_cover} alt="Home Cover Image" boxSize="100%" objectFit="cover" height="100%" objectPosition="30 90%" zIndex="-1" marginTop="-20" marginRight= "-50"/>
           </Flex>
-          <Flex id="home-main-right" margin="7%" width="30%" border="3px solid #fec287" borderRadius="18px" flexDirection="column">
+          <Flex id="home-main-right" margin="7%" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
             {destinations.map((destination, index) => (
-              <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row">
+              <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row" p={7}>
                 <LocationInput onChange={(value) => handleDestinationChange(index, value)} />
-                <Flex flexDirection="column">
+                <Flex flexDirection="column" ml={20} mt={-5}>
                   <Text>Date visiting (optional)</Text>
                   <Input type="date" />
                 </Flex>
@@ -167,20 +168,20 @@ function Home() {
                 )}
               </Flex>
             ))}
-            <Box>
+            <Box align="center" justifyContent="center" >
               <button onClick={handleAddDestination}>Add Destination</button>
             </Box>
             <Flex flexDirection="row" id="dates-input">
-              <Flex flexDirection="column">
+              <Flex flexDirection="column" flex ="1" p={5}>
                 <Text>First Day</Text>
                 <Input placeholder="First Day" type="date" />
               </Flex>
-              <Flex flexDirection="column">
+              <Flex flexDirection="column" flex="1" p={5}>
                 <Text>Last Day</Text>
                 <Input placeholder="Last Day" type="date" />
               </Flex>
             </Flex>
-            <Flex id="budget-input" flexDirection="column">
+            <Flex id="budget-input" flexDirection="column" mt={-5} p={5}>
               <Text>Budget</Text>
               <NumberInput min={0}>
                 <NumberInputField />
@@ -190,7 +191,7 @@ function Home() {
                 </NumberInputStepper>
               </NumberInput>
             </Flex>
-            <Flex id="num-people-input" flexDirection="column">
+            <Flex id="num-people-input" flexDirection="column" mt={-5} p={5}>
               <Text>Number of People</Text>
               <NumberInput min={0}>
                 <NumberInputField />
@@ -200,7 +201,8 @@ function Home() {
                 </NumberInputStepper>
               </NumberInput>
             </Flex>
-            <Flex flexDirection="row" id="activities-dropdown">
+            <Flex flexDirection="column" id="activities-dropdown" mt={-5} p={5}>
+              <Text>Select Activities</Text>
               <Select
                 placeholder={selectedActivities.length > 0 ? selectedActivities.join(', ') : 'Select activities'}
                 value={selectedActivities.join(', ')}
@@ -215,7 +217,7 @@ function Home() {
                 ))}
               </Select>
             </Flex>
-            <Flex flexDirection="row" id="submit-button" justifyContent="center" mt="4">
+            <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5}>
               <button onClick={handleSubmit}>Submit Itinerary</button>
             </Flex>
           </Flex>
