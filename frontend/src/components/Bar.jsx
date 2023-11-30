@@ -36,7 +36,7 @@ function Bar() {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    color: '#4c4f69',
+    color: '#209fb5',
     paddingX: '20px',
     textDecoration: 'none',
     fontSize: '130%',

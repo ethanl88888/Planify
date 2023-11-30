@@ -136,7 +136,7 @@ function Home() {
           <Bar />
         </Box>
         <Heading textAlign="center" color="#209fb5" fontSize="55px" mt={79}>
-          Let's Plan Your Next Trip.
+          Let's Plan Your Next Trip!
         </Heading>
       </Flex>
       <Box id="home-container" position="absolute" top="40%" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
@@ -153,7 +153,7 @@ function Home() {
           >
             <Image src={home_cover} alt="Home Cover Image" boxSize="100%" objectFit="cover" height="100%" objectPosition="30 90%" zIndex="-1" marginTop="-20" marginRight= "-50"/>
           </Flex>
-          <Flex id="home-main-right" margin="7%" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
+          <Flex id="home-main-right" margin="8%" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
             {destinations.map((destination, index) => (
               <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row" p={7}>
                 <LocationInput onChange={(value) => handleDestinationChange(index, value)} />

@@ -53,7 +53,7 @@ function Login() {
 
   return (
     <Flex height="100vh" alignItems="center" justifyContent="center">
-      <Flex direction="column" background="gray.100" border="3px solid #f4dbd6" p={12} rounded={6}>
+      <Flex direction="column" background="gray.100" border="3px solid #209fb5" p={12} rounded={6}>
         <Heading mb={6}>Log in</Heading>
         <Input
           placeholder="Email"
@@ -72,7 +72,7 @@ function Login() {
         {error && <Text color="red.500">{error}</Text>}
         <Button
           mb={6}
-          colorScheme="orange"
+          bg= "#209fb5"
           onClick={handleSubmit}
           isLoading={isLoading}
           loadingText="Logging in..."
