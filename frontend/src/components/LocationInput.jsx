@@ -11,7 +11,7 @@ function getSuggestionValue(suggestion) {
 }
 
 function renderSuggestion(suggestion) {
-  console.log(suggestion.name)
+  // console.log(suggestion.name)
   return (
     <ListItem
       boxShadow="0 1px 5px rgba(0, 0, 0, 0.65)"
@@ -72,6 +72,8 @@ class LocationInput extends React.Component {
     this.setState({
       value: newValue
     });
+
+    this.props.onChange(newValue);
   };
   
   onSuggestionsFetchRequested = ({ value }) => {

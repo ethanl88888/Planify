@@ -2,11 +2,12 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from 'react-router-dom';
+import { ChakraProvider } from '@chakra-ui/react'
 import Home from './Home';
 import Login from './Login';
 import Signup from './Signup';
 import MyPlans from './Plans';
-import { ChakraProvider } from '@chakra-ui/react'
+import NewPlan from './NewPlan';
 
 function App() {
   const router = createBrowserRouter([
@@ -23,9 +24,14 @@ function App() {
       element: <Signup/>
     },
     {
-      path: '/myplans',
+      path: '/my-plans',
       element: <MyPlans/>
+    },
+    {
+      path: '/new-plan',
+      element: <NewPlan/>
     }
+
     // {
     //   path: '/plan/:id',
     //   element: <Plan/>

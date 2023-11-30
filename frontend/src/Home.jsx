@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Import axios
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Bar from './components/Bar';
 import home_cover from '/home_cover.jpg';
 import {
@@ -17,6 +18,8 @@ import {
   Select,
 } from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
+
+const chatGPTKey = import.meta.env.VITE_CHATGPT_API_KEY;
 
 const activitiesOptions = [
   'Sightseeing',
@@ -41,17 +44,25 @@ const activitiesOptions = [
 ];
 
 function Home() {
+  const navigate = useNavigate();
+
   const [destinations, setDestinations] = useState([{ id: 1, value: '', dateVisiting: '' }]);
   const [selectedActivities, setSelectedActivities] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [firstDay, setFirstDay] = useState('');
-  const [lastDay, setLastDay] = useState('');
-  const [budget, setBudget] = useState('');
-  const [numPeople, setNumPeople] = useState('');
+  const [firstDay, setFirstDay] = useState();
+  const [lastDay, setLastDay] = useState();
+  const [budget, setBudget] = useState();
+  const [numPeople, setNumPeople] = useState();
 
-  const handleDestinationChange = (index, value) => {
+  const updateDestinationName = (index, value) => {
     const newDestinations = [...destinations];
-    newDestinations[index] = { id: index + 1, value, dateVisiting: '' };
+    newDestinations[index] = { id: index + 1, value, dateVisiting: destinations[index].dateVisiting };
+    setDestinations(newDestinations);
+  };
+
+  const updateDestinationDate = (index, dateVisiting) => {
+    const newDestinations = [...destinations];
+    newDestinations[index] = { id: index + 1, value: destinations[index].value, dateVisiting };
     setDestinations(newDestinations);
   };
 
@@ -81,39 +92,21 @@ function Home() {
 
   const handleSubmit = () => {
     try {
-      // Gather destination information
-      const destinationsData = destinations.map((dest) => ({
-        destination: dest.value,
-        dateVisiting: dest.dateVisiting,
-      }));
-  
-      // Gather other information
-      const firstDayElement = document.getElementById('firstDay');
-      const lastDayElement = document.getElementById('lastDay');
-      const budgetElement = document.getElementById('budget');
-      const numPeopleElement = document.getElementById('numPeople');
-  
-      const firstDay = firstDayElement ? firstDayElement.value : '';
-      const lastDay = lastDayElement ? lastDayElement.value : '';
-      const budget = budgetElement ? budgetElement.value : '';
-      const people = numPeopleElement ? numPeopleElement.value : '';
-  
       // Construct the data object to send to the server
-      const data = {
+      const dataForDatabase = {
         token: localStorage.getItem('token'),
-        destinations: destinationsData,
-        firstDay,
-        lastDay,
-        budget,
-        people,
+        destinations: destinations,
+        firstDay: firstDay,
+        lastDay: lastDay,
+        budget: budget,
+        numPeople: numPeople,
         activities: selectedActivities,
       };
-  
-      console.log('Sending data:', data); // Log the data being sent
-  
+
+      console.log('Sending data:', dataForDatabase); // Log the data being sent
       // Make a POST request to the server
       axios
-        .post('http://localhost:3003/create-itinerary', data)
+        .post('http://localhost:3003/create-itinerary', dataForDatabase)
         .then((response) => {
           console.log('Server response:', response.data); // Log the server response
           // Handle any additional logic or UI updates as needed
@@ -122,12 +115,63 @@ function Home() {
           console.error('Error submitting itinerary:', error);
           // Handle errors or display an error message to the user
         });
+
+      const dataForGPT = `
+        Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
+        First Day of Overall Trip: ${firstDay},
+        Last Day of Overall Trip: ${lastDay},
+        Overall Budget of Trip: ${budget},
+        Number of People in this Trip: ${numPeople},
+        General Activities Looking Forward to in this Trip: ${selectedActivities}
+      `
+
+      let inputForGPT = JSON.stringify({
+        "model": "gpt-3.5-turbo",
+        "messages": [
+          {
+            "role": "system",
+            "content": `You are given the following user input: ${dataForGPT}.`
+          },
+          {
+            "role": "user",
+            "content": `Based on the data I gave you, generate an itinerary.
+                        If the dateVisiting field of a destination is empty, assume it is up to you to decide when to visit that corresponding destination and how long to stay there.
+                        Your response should strictly be in JSON format.
+                        The initial groups should be dates represented in yyyy-mm-dd format.
+                        Each of these groups will contain multiple subgroups with each key being the time (represented with H:M P.M/A.M) and the content inside being the event and location of an activity. Be specific with locations.
+                        You are to go into detail for each activity's event field based on the general activities given to you in the user input.
+                        For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
+                        { "2023-11-15": { "12:30 P.M": { "event": "Famous tonkotsu ramen with a solo-dining experience for lunch", "location": "Ichiran Ramen, Jingu-dori Street, Jinnan 1-chome, Shibuya, Tokyo, 150-8377, Japan" } }
+                        Note that this is just an example and it does not need to be used when the user input is exactly this.
+                      `
+          }
+        ]
+      });
+
+      let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'https://api.openai.com/v1/chat/completions',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${chatGPTKey}`,
+        },
+        data: inputForGPT
+      };
+
+      axios.request(config)
+      .then((response) => {
+        const assistantMessage = response.data.choices[0].message.content;
+        // console.log(assistantMessage);
+        navigate('/new-plan', { state: { assistantMessage } });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
     } catch (error) {
       console.error('Error in handleSubmit:', error);
     }
   };
-  
-  
 
   return (
     <div id="home">
@@ -136,7 +180,7 @@ function Home() {
           <Bar />
         </Box>
         <Heading textAlign="center" color="#209fb5" fontSize="55px" mt={79}>
-          Let's Plan Your Next Trip.
+          Let's Plan Your Next Trip!
         </Heading>
       </Flex>
       <Box id="home-container" position="absolute" top="40%" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
@@ -153,13 +197,13 @@ function Home() {
           >
             <Image src={home_cover} alt="Home Cover Image" boxSize="100%" objectFit="cover" height="100%" objectPosition="30 90%" zIndex="-1" marginTop="-20" marginRight= "-50"/>
           </Flex>
-          <Flex id="home-main-right" margin="7%" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
+          <Flex id="home-main-right" margin="8%" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
             {destinations.map((destination, index) => (
               <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row" p={7}>
-                <LocationInput onChange={(value) => handleDestinationChange(index, value)} />
+                <LocationInput onChange={(value) => updateDestinationName(index, value)} />
                 <Flex flexDirection="column" ml={20} mt={-5}>
                   <Text>Date visiting (optional)</Text>
-                  <Input type="date" />
+                  <Input type="date" onChange={(value) => updateDestinationDate(index, value.target.value)} />
                 </Flex>
                 {destinations.length > 1 && (
                   <Box>
@@ -174,16 +218,16 @@ function Home() {
             <Flex flexDirection="row" id="dates-input">
               <Flex flexDirection="column" flex ="1" p={5}>
                 <Text>First Day</Text>
-                <Input placeholder="First Day" type="date" />
+                <Input placeholder="First Day" type="date" value={firstDay} onChange={(e) => setFirstDay(e.target.value)} />
               </Flex>
               <Flex flexDirection="column" flex="1" p={5}>
                 <Text>Last Day</Text>
-                <Input placeholder="Last Day" type="date" />
+                <Input placeholder="Last Day" type="date" value={lastDay} onChange={(e) => setLastDay(e.target.value)} />
               </Flex>
             </Flex>
             <Flex id="budget-input" flexDirection="column" mt={-5} p={5}>
               <Text>Budget</Text>
-              <NumberInput min={0}>
+              <NumberInput min={0} value={budget} onChange={(e) => setBudget(e)}>
                 <NumberInputField />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
@@ -193,7 +237,7 @@ function Home() {
             </Flex>
             <Flex id="num-people-input" flexDirection="column" mt={-5} p={5}>
               <Text>Number of People</Text>
-              <NumberInput min={0}>
+              <NumberInput min={0} value={numPeople} onChange={(e) => setNumPeople(e)}>
                 <NumberInputField />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
@@ -227,5 +271,5 @@ function Home() {
   );
 }
 
-export default Home
+export default Home;
 
