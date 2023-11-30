@@ -138,11 +138,12 @@ function Home() {
                         If the dateVisiting field of a destination is empty, assume it is up to you to decide when to visit that corresponding destination and how long to stay there.
                         Your response should strictly be in JSON format.
                         The initial groups should be dates represented in yyyy-mm-dd format.
-                        Each of these groups will contain multiple subgroups with each key being the time (represented with H:M P.M/A.M) and the content inside being the event and location of an activity. Be specific with locations.
+                        Each of these groups will contain multiple subgroups with each key being the time (represented with H:M PM/AM) and the content inside being the event and location of an activity. Be specific with locations.
                         You are to go into detail for each activity's event field based on the general activities given to you in the user input.
                         For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
-                        { "2023-11-15": { "12:30 P.M": { "event": "Famous tonkotsu ramen with a solo-dining experience for lunch", "location": "Ichiran Ramen, Jingu-dori Street, Jinnan 1-chome, Shibuya, Tokyo, 150-8377, Japan" } }
-                        Note that this is just an example and it does not need to be used when the user input is exactly this.
+                        { "yyyy-mm-dd": { "hh:mm AM/PM": { "event": "Event description", "location": "street address, neighborhood, city, county, state, postcode, country" } }
+                        The event should be descriptive as possible, and the location should strictly follow the following format: street address, neighborhood, city, county, state, postcode, country.
+                        If you are unable to give the full address of a location, you do not need to fill out the first portion of the location format.
                       `
           }
         ]
