@@ -33,24 +33,13 @@ db.run('CREATE TABLE IF NOT EXISTS session_tokens (id INTEGER PRIMARY KEY AUTOIN
   console.log('Created session tokens table.');
 });
 
-// Add a new table for itineraries
-// Create itineraries table
-db.run('CREATE TABLE IF NOT EXISTS itineraries (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, first_day TEXT NOT NULL, last_day TEXT NOT NULL, budget REAL NOT NULL, people INTEGER NOT NULL, activities TEXT NOT NULL, plan TEXT NOT NULL)', (err) => {
+// Create itineraries table with destinations_data column
+db.run('CREATE TABLE IF NOT EXISTS itineraries (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, first_day TEXT NOT NULL, last_day TEXT NOT NULL, budget REAL NOT NULL, people INTEGER NOT NULL, activities TEXT NOT NULL, plan TEXT NOT NULL, destinations_data TEXT)', (err) => {
   if (err) {
     return console.error(err.message);
   }
   console.log('Created itineraries table.');
 });
-
-// Create destinations table
-db.run('CREATE TABLE IF NOT EXISTS destinations (id INTEGER PRIMARY KEY AUTOINCREMENT, itinerary_id INTEGER NOT NULL, destination TEXT NOT NULL, date_visiting TEXT NOT NULL)', (err) => {
-  if (err) {
-    return console.error(err.message);
-  }
-  console.log('Created destinations table.');
-});
-
-
 
 app.post('/create-itinerary', express.json(), (req, res) => {
   const { token, destinations, firstDay, lastDay, budget, people, activities } = req.body;
@@ -68,31 +57,19 @@ app.post('/create-itinerary', express.json(), (req, res) => {
     const userId = row.user_id;
 
     // Insert itinerary into the itineraries table
-    const insertItinerarySql = 'INSERT INTO itineraries (user_id, first_day, last_day, budget, people, activities, plan) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    const insertItinerarySql = 'INSERT INTO itineraries (user_id, first_day, last_day, budget, people, activities, plan, destinations_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
     
-    db.run(insertItinerarySql, [userId, firstDay, lastDay, budget, people, activities.join(', '), ''], function(err) {
+    db.run(insertItinerarySql, [userId, firstDay, lastDay, budget, people, activities.join(', '), '', JSON.stringify(destinations)], function(err) {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
       const itineraryId = this.lastID; // Get the last inserted itinerary ID
 
-      // Insert destinations into the destinations table
-      const insertDestinationSql = 'INSERT INTO destinations (itinerary_id, destination, date_visiting) VALUES (?, ?, ?)';
-      destinations.forEach(({ destination, dateVisiting }) => {
-        db.run(insertDestinationSql, [itineraryId, destination, dateVisiting], (err) => {
-          if (err) {
-            return res.status(500).json({ error: err.message });
-          }
-        });
-      });
-
       return res.json({ success: 'Itinerary created.' });
     });
   });
 });
-
-
 
 app.get('/user-itineraries', (req, res) => {
   const token = req.query.token;
@@ -109,54 +86,34 @@ app.get('/user-itineraries', (req, res) => {
 
     const userId = row.user_id;
 
-    // Retrieve user itineraries and associated destinations from the database
-    const getItinerariesSql = 'SELECT itineraries.id AS itinerary_id, itineraries.first_day, itineraries.last_day, itineraries.budget, itineraries.people, itineraries.activities, itineraries.plan, destinations.destination, destinations.date_visiting FROM itineraries JOIN destinations ON itineraries.id = destinations.itinerary_id WHERE itineraries.user_id = ?';
-    
+    // Retrieve user itineraries from the database
+    const getItinerariesSql = 'SELECT id, first_day, last_day, budget, people, activities, plan, destinations_data FROM itineraries WHERE user_id = ?';
+
     db.all(getItinerariesSql, [userId], (err, rows) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
       // Convert rows to a more structured format
-      const formattedItineraries = [];
-      rows.forEach((row) => {
-        const existingItinerary = formattedItineraries.find(
-          (itinerary) => itinerary.id === row.itinerary_id && itinerary.firstDay === row.first_day
-        );
+      const formattedItineraries = rows.map((row) => {
+        const itinerary = {
+          id: row.id,
+          destinations: JSON.parse(row.destinations_data || '[]'), // Parse destinations_data as JSON
+          firstDay: row.first_day,
+          lastDay: row.last_day,
+          budget: row.budget,
+          people: row.people,
+          activities: row.activities.split(', '), // Convert activities string to an array
+          plan: row.plan
+        };
 
-        if (existingItinerary) {
-          // Itinerary already exists, add the new destination to its destinations array
-          existingItinerary.destinations.push({
-            destination: row.destination,
-            dateVisiting: row.date_visiting,
-          });
-        } else {
-          // Itinerary doesn't exist, create a new itinerary object
-          formattedItineraries.push({
-            id: row.itinerary_id,
-            destinations: [
-              {
-                destination: row.destination,
-                dateVisiting: row.date_visiting,
-              },
-            ],
-            firstDay: row.first_day,
-            lastDay: row.last_day,
-            budget: row.budget,
-            people: row.people,
-            activities: row.activities.split(', '), // Convert activities string to an array
-            plan: row.plan,
-          });
-        }
+        return itinerary;
       });
 
       return res.json({ itineraries: formattedItineraries });
     });
   });
 });
-
-
-
 
 // allow log in with email and password
 app.post('/login', express.json(), (req, res) => {
