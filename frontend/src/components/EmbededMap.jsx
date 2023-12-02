@@ -48,13 +48,11 @@ const MapComponent = ({ inputDestination }) => {
   }, [inputDestination]);
 
   return (
-    <ReactMapGL
-      {...viewport}
-      mapStyle={mapStyle}
-      onViewportChange={(newViewport) => setViewport(newViewport)}
-    >
-      {/* You can add markers or other components here */}
-    </ReactMapGL>
+    <div style={{ width: '300px', height: '200px', border: '1px solid #ccc', position: 'relative' }}>
+      <ReactMapGL {...viewport} mapStyle={mapStyle} onViewportChange={setViewport}>
+        {/* Markers or other components */}
+      </ReactMapGL>
+    </div>
   );
 };
 
