@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Bar from './components/Bar';
-import { Box, Heading, VStack, Text } from '@chakra-ui/react';
+import { Box, Heading, VStack, Text, Button } from '@chakra-ui/react';
 import axios from 'axios';
 
 const MyPlans = () => {
@@ -33,7 +34,7 @@ const MyPlans = () => {
           {itineraries.map((itinerary) => (
             <Box key={itinerary.id} borderWidth="1px" borderRadius="md" p={4} width="100%">
               {/* Displaying information about each itinerary */}
-              <Text fontWeight="bold">Itinerary #{itinerary.id}</Text>
+              <Text fontWeight="bold">Itinerary #{itinerary.itinerary_name}</Text>
               <Text>First Day: {itinerary.firstDay}</Text>
               <Text>Last Day: {itinerary.lastDay}</Text>
               <Text>Budget: {itinerary.budget}</Text>
@@ -57,6 +58,13 @@ const MyPlans = () => {
 
               {/* Additional details can be displayed based on your data structure */}
               <Text>Plan: {itinerary.plan}</Text>
+
+              <Link to={`/itinerary/${itinerary.id}`}>
+                <Button colorScheme="blue" mt={4}>
+                  View Itinerary
+                </Button>
+              </Link>
+
             </Box>
           ))}
         </VStack>
