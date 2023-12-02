@@ -37,7 +37,7 @@ const MyPlans = () => {
               <Text>First Day: {itinerary.firstDay}</Text>
               <Text>Last Day: {itinerary.lastDay}</Text>
               <Text>Budget: {itinerary.budget}</Text>
-              <Text>Number of People: {itinerary.people}</Text>
+              <Text>Number of People: {itinerary.numPeople}</Text>
 
               {/* Displaying information about activities */}
               <Text>Activities:</Text>
@@ -50,7 +50,7 @@ const MyPlans = () => {
               <VStack align="start" spacing={0}>
                 {itinerary.destinations.map((destination, index) => (
                   <Text key={index}>
-                    {destination.destination} ({destination.dateVisiting})
+                    {destination.value} ({destination.dateVisiting})
                   </Text>
                 ))}
               </VStack>
