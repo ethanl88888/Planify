@@ -34,7 +34,7 @@ db.run('CREATE TABLE IF NOT EXISTS session_tokens (id INTEGER PRIMARY KEY AUTOIN
 });
 
 // Create itineraries table with destinations_data column
-db.run('CREATE TABLE IF NOT EXISTS itineraries (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, first_day TEXT NOT NULL, last_day TEXT NOT NULL, budget REAL NOT NULL, numPeople INTEGER NOT NULL, activities TEXT NOT NULL, plan TEXT NOT NULL, destinations_data TEXT)', (err) => {
+db.run('CREATE TABLE IF NOT EXISTS itineraries (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, itinerary_name TEXT, first_day TEXT NOT NULL, last_day TEXT NOT NULL, budget REAL NOT NULL, numPeople INTEGER NOT NULL, activities TEXT NOT NULL, plan TEXT NOT NULL, destinations_data TEXT)', (err) => {
   if (err) {
     return console.error(err.message);
   }
