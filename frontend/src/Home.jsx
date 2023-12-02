@@ -16,6 +16,7 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Select,
+  Button,
 } from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
 
@@ -267,7 +268,13 @@ function Home() {
               </Select>
             </Flex>
             <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5}>
-              <button onClick={handleSubmit}>Submit Itinerary</button>
+              <Button
+                mb={6}
+                bg="#209fb5"
+                onClick={handleSubmit}
+              >
+                Submit Itinerary
+              </Button>
             </Flex>
           </Flex>
         </Flex>
