@@ -8,6 +8,7 @@ import Login from './Login';
 import Signup from './Signup';
 import MyPlans from './Plans';
 import NewPlan from './NewPlan';
+import Test from './test';
 
 function App() {
   const router = createBrowserRouter([
@@ -30,6 +31,10 @@ function App() {
     {
       path: '/new-plan',
       element: <NewPlan/>
+    },
+    {
+      path: '/test',
+      element: <Test />
     }
 
     // {

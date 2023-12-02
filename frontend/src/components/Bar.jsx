@@ -56,7 +56,7 @@ function Bar() {
       position="fixed"
       backgroundColor="white"
       zIndex={100}
-    >j
+    >
       <Box width="15%" className="white-space" />
       <Flex id="contents" width="1100px" justifyContent="space-between" flexShrink={0}>
         <Link id="bar-logo" textDecoration="none" display="flex" maxWidth="min-content" _hover={{ textDecoration: "none" }} href="/">

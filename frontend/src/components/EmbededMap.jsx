@@ -1,64 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import ReactMapGL from 'react-map-gl';
-import PropTypes from 'prop-types';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import axios from 'axios';
+import PropTypes from 'prop-types';
 
 const geoapifyApiKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
 
-const MapComponent = ({ inputDestination }) => {
-  const [viewport, setViewport] = useState({
-    latitude: 37.7577, // Default latitude
-    longitude: -122.4376, // Default longitude
-    zoom: 11,
-    width: '100vw',
-    height: '100vh'
-  });
+const MapWithMarkers = ({ destinations }) => {
+  const mapContainer = React.useRef(null);
 
-  const mapStyle = `https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=${geoapifyApiKey}`;
-
-  // Function to geocode the input destination
-  const geocodeDestination = async (destination) => {
-    try {
-      const response = await axios.get(`https://api.geoapify.com/v1/geocode/search`, {
-        params: {
-          text: destination,
-          apiKey: geoapifyApiKey,
-          limit: 1
-        }
-      });
-
-      if (response.data.results && response.data.results.length > 0) {
-        const { lat, lon } = response.data.results[0];
-        setViewport(prevViewport => ({
-          ...prevViewport,
-          latitude: lat,
-          longitude: lon
-        }));
-      }
-    } catch (error) {
-      console.error('Error geocoding the destination:', error);
-    }
-  };
-
-  // Effect to geocode when inputDestination changes
   useEffect(() => {
-    if (inputDestination) {
-      geocodeDestination(inputDestination);
-    }
-  }, [inputDestination]);
+    const fetchDestinations = async () => {
+      const coordinates = [];
 
-  return (
-    <div style={{ width: '300px', height: '200px', border: '1px solid #ccc', position: 'relative' }}>
-      <ReactMapGL {...viewport} mapStyle={mapStyle} onViewportChange={setViewport}>
-        {/* Markers or other components */}
-      </ReactMapGL>
-    </div>
-  );
+      for (let destination of destinations) {
+        try {
+          const response = await axios.get(`https://api.geoapify.com/v1/geocode/search`, {
+            params: {
+              text: destination,
+              apiKey: geoapifyApiKey,
+              limit: 1
+            }
+          });
+
+          if (response.data.features && response.data.features.length > 0) {
+            const coord = response.data.features[0].geometry.coordinates;
+            coordinates.push(coord);
+          }
+        } catch (error) {
+          console.error('Error geocoding destination:', error);
+        }
+      }
+
+      if (coordinates.length > 0) {
+        const bounds = coordinates.reduce((bounds, coord) => {
+          return bounds.extend(coord);
+        }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
+
+        // Initialize and set up the map
+        const initialMap = new maplibregl.Map({
+          container: mapContainer.current,
+          style: `https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=${geoapifyApiKey}`,
+          bounds: bounds,
+          padding: 20
+        });
+
+        coordinates.forEach((coord) => {
+          new maplibregl.Marker()
+            .setLngLat(coord)
+            .addTo(initialMap);
+        });
+      }
+    };
+
+    if (mapContainer.current) {
+      fetchDestinations();
+    }
+  }, [destinations]);
+
+  return <div ref={mapContainer} style={{ height: '100vh', width: '100vw' }} />;
 };
 
-// PropType validation
-MapComponent.propTypes = {
-    inputDestination: PropTypes.string.isRequired
-  };
+MapWithMarkers.propTypes = {
+  destinations: PropTypes.arrayOf(PropTypes.string).isRequired
+};
 
-export default MapComponent;
+export default MapWithMarkers;
