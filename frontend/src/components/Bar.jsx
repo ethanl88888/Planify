@@ -50,7 +50,7 @@ function Bar() {
     <Flex
       id="bar"
       width="100%"
-      height="7%"
+      height="60px"
       justifyContent="space-between"
       borderBottom="1px solid #6c6f85"
       position="fixed"
@@ -66,7 +66,7 @@ function Bar() {
           </Heading>
         </Link>
         {storedToken && (
-          <Link href="/myplans" id="my-plans" className="bar-button" {...buttonStyle}>
+          <Link href="/my-plans" id="my-plans" className="bar-button" {...buttonStyle}>
             My Plans
           </Link>
         )}

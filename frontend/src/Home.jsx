@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Import axios
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Bar from './components/Bar';
 import home_cover from '/home_cover.jpg';
 import {
@@ -15,8 +16,12 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Select,
+  Button,
+  useToast
 } from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
+
+const chatGPTKey = import.meta.env.VITE_CHATGPT_API_KEY;
 
 const activitiesOptions = [
   'Sightseeing',
@@ -41,18 +46,40 @@ const activitiesOptions = [
 ];
 
 function Home() {
+  const navigate = useNavigate();
+
   const [destinations, setDestinations] = useState([{ id: 1, value: '', dateVisiting: '' }]);
   const [selectedActivities, setSelectedActivities] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [firstDay, setFirstDay] = useState('');
-  const [lastDay, setLastDay] = useState('');
-  const [budget, setBudget] = useState('');
-  const [numPeople, setNumPeople] = useState('');
+  const [firstDay, setFirstDay] = useState();
+  const [lastDay, setLastDay] = useState();
+  const [budget, setBudget] = useState();
+  const [numPeople, setNumPeople] = useState();
+  const toast = useToast();
 
-  const handleDestinationChange = (index, value) => {
+  const updateDestinationName = (index, value) => {
     const newDestinations = [...destinations];
-    newDestinations[index] = { id: index + 1, value, dateVisiting: '' };
+    newDestinations[index] = { id: index + 1, value, dateVisiting: destinations[index].dateVisiting };
     setDestinations(newDestinations);
+  };
+
+  const updateDestinationDate = (index, dateVisiting) => {
+    // Check if firstDay and lastDay are set
+    if (firstDay && lastDay) {
+      const newDestinations = [...destinations];
+      newDestinations[index] = { id: index + 1, value: destinations[index].value, dateVisiting };
+      setDestinations(newDestinations);
+    } else {
+      // Show a toast notification
+      toast.error("Please set your trip's first and last day before updating each destination's date.", {
+        position: "top-center",
+        autoClose: 3000, // milliseconds
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
 
   const handleRemoveDestination = (index) => {
@@ -65,6 +92,25 @@ function Home() {
 
   const handleAddDestination = () => {
     setDestinations([...destinations, { id: destinations.length + 1, value: '', dateVisiting: '' }]);
+  };
+
+  const handleLastDayChange = (e) => {
+    const newLastDay = e.target.value;
+
+    // Perform the validation check
+    if (!firstDay || new Date(newLastDay) >= new Date(firstDay)) {
+      setLastDay(newLastDay);
+    } else {
+      // You can display an error message or handle the invalid input in some way
+      toast.error("Last day cannot be before first day.", {
+        position: "top-center",
+        autoClose: 3000, // milliseconds
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
 
   const toggleDropdown = () => {
@@ -81,53 +127,75 @@ function Home() {
 
   const handleSubmit = () => {
     try {
-      // Gather destination information
-      const destinationsData = destinations.map((dest) => ({
-        destination: dest.value,
-        dateVisiting: dest.dateVisiting,
-      }));
-  
-      // Gather other information
-      const firstDayElement = document.getElementById('firstDay');
-      const lastDayElement = document.getElementById('lastDay');
-      const budgetElement = document.getElementById('budget');
-      const numPeopleElement = document.getElementById('numPeople');
-  
-      const firstDay = firstDayElement ? firstDayElement.value : '';
-      const lastDay = lastDayElement ? lastDayElement.value : '';
-      const budget = budgetElement ? budgetElement.value : '';
-      const people = numPeopleElement ? numPeopleElement.value : '';
-  
-      // Construct the data object to send to the server
-      const data = {
-        token: localStorage.getItem('token'),
-        destinations: destinationsData,
-        firstDay,
-        lastDay,
-        budget,
-        people,
-        activities: selectedActivities,
+      const dataForGPT = `
+        Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
+        First Day of Overall Trip: ${firstDay},
+        Last Day of Overall Trip: ${lastDay},
+        Overall Budget of Trip: ${budget},
+        Number of People in this Trip: ${numPeople},
+        General Activities Looking Forward to in this Trip: ${selectedActivities}
+      `
+
+      let inputForGPT = JSON.stringify({
+        "model": "gpt-3.5-turbo",
+        "messages": [
+          {
+            "role": "system",
+            "content": `You are given the following user input: ${dataForGPT}.`
+          },
+          {
+            "role": "user",
+            "content": `Based on the data I gave you, generate an itinerary strictly in JSON format, without any additional text or markdown.
+                        If the dateVisiting field of a destination is empty, assume it is up to you to decide when to visit that corresponding destination and how long to stay there. 
+                        The initial groups should be dates represented in yyyy-mm-dd format.
+                        Each of these groups will contain multiple subgroups with each key being the time (represented with H:M PM/AM) and the content inside being the event and location of an activity. Be specific with locations.
+                        You are to go into detail for each activity's event field based on the general activities given to you in the user input.
+                        For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
+                        { "yyyy-mm-dd": { "hh:mm AM/PM": { "event": "Event description", "location": "street address, neighborhood, city, county, state, postcode, country" } }
+                        The event should be very descriptive, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
+                        If you are unable to give the full address of a location, you can choose to cut out as much of the left portion of the location format. However, you must provide city, county, state, postcode, country as a bare minimum.
+                      `
+          }
+        ]
+      });
+
+      let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: 'https://api.openai.com/v1/chat/completions',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${chatGPTKey}`,
+        },
+        data: inputForGPT
       };
-  
-      console.log('Sending data:', data); // Log the data being sent
-  
-      // Make a POST request to the server
-      axios
-        .post('http://localhost:3003/create-itinerary', data)
-        .then((response) => {
-          console.log('Server response:', response.data); // Log the server response
-          // Handle any additional logic or UI updates as needed
-        })
-        .catch((error) => {
-          console.error('Error submitting itinerary:', error);
-          // Handle errors or display an error message to the user
-        });
+
+      axios.request(config)
+      .then((response) => {
+        const assistantMessage = response.data.choices[0].message.content;
+        const modifiedAssistantMessage = '';
+        const useModified = false;
+
+        // Split the message into lines
+        const lines = assistantMessage.split('\n');
+        if (lines[0] == '```json') {
+          // Remove the first and last lines
+          modifiedAssistantMessage = lines.slice(1, -1).join('\n');
+          useModified = true;
+        }
+    
+        console.log(assistantMessage); // Log the modified message
+    
+        // Update the state or perform any other actions with the modified message
+        navigate('/plan', { state: { assistantMessage: useModified ? modifiedAssistantMessage : assistantMessage } });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
     } catch (error) {
       console.error('Error in handleSubmit:', error);
     }
   };
-  
-  
 
   return (
     <div id="home">
@@ -156,10 +224,10 @@ function Home() {
           <Flex id="home-main-right" margin="8%" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
             {destinations.map((destination, index) => (
               <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row" p={7}>
-                <LocationInput onChange={(value) => handleDestinationChange(index, value)} />
+                <LocationInput onChange={(value) => updateDestinationName(index, value)} />
                 <Flex flexDirection="column" ml={20} mt={-5}>
                   <Text>Date visiting (optional)</Text>
-                  <Input type="date" />
+                  <Input type="date" onChange={(value) => updateDestinationDate(index, value.target.value)} />
                 </Flex>
                 {destinations.length > 1 && (
                   <Box>
@@ -174,16 +242,16 @@ function Home() {
             <Flex flexDirection="row" id="dates-input">
               <Flex flexDirection="column" flex ="1" p={5}>
                 <Text>First Day</Text>
-                <Input placeholder="First Day" type="date" />
+                <Input placeholder="First Day" type="date" value={firstDay} onChange={(e) => setFirstDay(e.target.value)} />
               </Flex>
               <Flex flexDirection="column" flex="1" p={5}>
                 <Text>Last Day</Text>
-                <Input placeholder="Last Day" type="date" />
+                <Input placeholder="Last Day" type="date" value={lastDay} onChange={handleLastDayChange} disabled={!firstDay}/>
               </Flex>
             </Flex>
             <Flex id="budget-input" flexDirection="column" mt={-5} p={5}>
               <Text>Budget</Text>
-              <NumberInput min={0}>
+              <NumberInput min={0} value={budget} onChange={(e) => setBudget(parseFloat(e))}>
                 <NumberInputField />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
@@ -193,7 +261,7 @@ function Home() {
             </Flex>
             <Flex id="num-people-input" flexDirection="column" mt={-5} p={5}>
               <Text>Number of People</Text>
-              <NumberInput min={0}>
+              <NumberInput min={0} value={numPeople} onChange={(e) => setNumPeople(parseInt(e))}>
                 <NumberInputField />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
@@ -218,7 +286,13 @@ function Home() {
               </Select>
             </Flex>
             <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5}>
-              <button onClick={handleSubmit}>Submit Itinerary</button>
+              <Button
+                mb={6}
+                bg="#209fb5"
+                onClick={handleSubmit}
+              >
+                Submit Itinerary
+              </Button>
             </Flex>
           </Flex>
         </Flex>
@@ -227,5 +301,5 @@ function Home() {
   );
 }
 
-export default Home
+export default Home;
 

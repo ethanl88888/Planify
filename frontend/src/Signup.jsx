@@ -76,7 +76,7 @@ function Signup() {
         {error && <Text color="red.500">{error}</Text>}
         <Button
           mb={6}
-          bg= "#209fb5"
+          bg="#209fb5"
           onClick={handleSubmit}
           isLoading={isLoading}
           loadingText="Signing up..."
