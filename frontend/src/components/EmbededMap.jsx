@@ -1,68 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import axios from 'axios';
 import PropTypes from 'prop-types';
 
-const geoapifyApiKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
+const geoapifyKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
 
 const MapWithMarkers = ({ destinations }) => {
+  // console.log(destinations)
+  const [map, setMap] = useState(null);
   const mapContainer = React.useRef(null);
 
+  const offsetCoordinate = (coordinates) => {
+    const offsetXPercent = 1.002;
+    const [x, y] = coordinates;
+    const offsetX = x * offsetXPercent;
+    return [offsetX, y];
+  };
+
   useEffect(() => {
-    const fetchDestinations = async () => {
-      const coordinates = [];
-
-      for (let destination of destinations) {
-        try {
-          const response = await axios.get(`https://api.geoapify.com/v1/geocode/search`, {
-            params: {
-              text: destination,
-              apiKey: geoapifyApiKey,
-              limit: 1
-            }
-          });
-
-          if (response.data.features && response.data.features.length > 0) {
-            const coord = response.data.features[0].geometry.coordinates;
-            coordinates.push(coord);
-          }
-        } catch (error) {
-          console.error('Error geocoding destination:', error);
-        }
-      }
-
-      if (coordinates.length > 0) {
-        const bounds = coordinates.reduce((bounds, coord) => {
-          return bounds.extend(coord);
-        }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
-
-        // Initialize and set up the map
+    const initializeMap = async () => {
+      try {
+        // Initialize the map with the center set to the coordinates of the first destination
         const initialMap = new maplibregl.Map({
           container: mapContainer.current,
-          style: `https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=${geoapifyApiKey}`,
-          bounds: bounds,
-          padding: 20
+          style: `https://maps.geoapify.com/v1/styles/osm-bright/style.json?apiKey=${geoapifyKey}`,
+          center: offsetCoordinate(destinations[0]),
+          zoom: 10, // You can adjust the zoom level as needed
         });
 
-        coordinates.forEach((coord) => {
-          new maplibregl.Marker()
-            .setLngLat(coord)
-            .addTo(initialMap);
+        initialMap.on('load', () => {
+          setMap(initialMap);
         });
+
+        destinations.forEach(destination => {
+          const marker = new maplibregl.Marker().setLngLat(destination).addTo(initialMap);
+        });
+      } catch (error) {
+        console.error('Error fetching geocode data:', error);
       }
     };
 
-    if (mapContainer.current) {
-      fetchDestinations();
+    if (mapContainer.current && !map) {
+      initializeMap();
     }
-  }, [destinations]);
+
+    return () => map?.remove();
+  }, [map, destinations]);
 
   return <div ref={mapContainer} style={{ height: '100vh', width: '100vw' }} />;
 };
 
 MapWithMarkers.propTypes = {
-  destinations: PropTypes.arrayOf(PropTypes.string).isRequired
+  destinations: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
 };
 
 export default MapWithMarkers;

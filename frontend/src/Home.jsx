@@ -126,7 +126,7 @@ function Home() {
       `
 
       let inputForGPT = JSON.stringify({
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4-1106-preview",
         "messages": [
           {
             "role": "system",
@@ -134,15 +134,14 @@ function Home() {
           },
           {
             "role": "user",
-            "content": `Based on the data I gave you, generate an itinerary.
-                        If the dateVisiting field of a destination is empty, assume it is up to you to decide when to visit that corresponding destination and how long to stay there.
-                        Your response should strictly be in JSON format.
+            "content": `Based on the data I gave you, generate an itinerary strictly in JSON format, without any additional text or markdown.
+                        If the dateVisiting field of a destination is empty, assume it is up to you to decide when to visit that corresponding destination and how long to stay there. 
                         The initial groups should be dates represented in yyyy-mm-dd format.
                         Each of these groups will contain multiple subgroups with each key being the time (represented with H:M PM/AM) and the content inside being the event and location of an activity. Be specific with locations.
                         You are to go into detail for each activity's event field based on the general activities given to you in the user input.
                         For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
                         { "yyyy-mm-dd": { "hh:mm AM/PM": { "event": "Event description", "location": "street address, neighborhood, city, county, state, postcode, country" } }
-                        The event should be descriptive as possible, and the location should strictly follow the following format: street address, neighborhood, city, county, state, postcode, country.
+                        The event should be descriptive, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
                         If you are unable to give the full address of a location, you do not need to fill out the first portion of the location format.
                       `
           }
@@ -163,8 +162,17 @@ function Home() {
       axios.request(config)
       .then((response) => {
         const assistantMessage = response.data.choices[0].message.content;
-        // console.log(assistantMessage);
-        navigate('/new-plan', { state: { assistantMessage } });
+    
+        // Split the message into lines
+        const lines = assistantMessage.split('\n');
+    
+        // Remove the first and last lines
+        const modifiedAssistantMessage = lines.slice(1, -1).join('\n');
+    
+        console.log(modifiedAssistantMessage); // Log the modified message
+    
+        // Update the state or perform any other actions with the modified message
+        navigate('/new-plan', { state: { assistantMessage: modifiedAssistantMessage } });
       })
       .catch((error) => {
         console.log(error);
