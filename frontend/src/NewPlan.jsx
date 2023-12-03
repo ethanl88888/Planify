@@ -87,7 +87,7 @@ function NewPlan() {
       console.log("Job ID: " + result.body.id);
       console.log("Job URL: " + result.body.url);
 
-      const queryResult = await getAsyncResult(`${url}&id=${result.body.id}`, 1 * 1000 /*check every second*/, 15 /*max number of attempts*/);
+      const queryResult = await getAsyncResult(`${url}&id=${result.body.id}`, 0.5 * 1000 /*check every second*/, 100 /*max number of attempts*/);
 
       // console.log(queryResult);
 
