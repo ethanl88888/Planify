@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import MapWithMarkers from './components/EmbededMap';
 import Bar from './components/Bar';
 import { Box } from '@chakra-ui/react';
+import Fuse from 'fuse.js';
 
 const geoapifyKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
 
@@ -11,6 +12,7 @@ function NewPlan() {
   const [locationData, setLocationData] = useState([]);
   const [activeLocation, setActiveLocation] = useState(null)
   const [locationsMapping, setLocationsMapping] = useState({})
+  const [fuse, setFuse] = useState(null);  // Add this line
 
   const assistantMessage = location.state?.assistantMessage || null;
   if (assistantMessage == null) {
@@ -69,7 +71,9 @@ function NewPlan() {
         })
         .catch(err => reject(err));
     };
-  }  async function fetchData() {
+  }
+
+  async function fetchData() {
     try {
       const result = await fetch(url, {
         method: 'post',
@@ -87,7 +91,7 @@ function NewPlan() {
       console.log("Job ID: " + result.body.id);
       console.log("Job URL: " + result.body.url);
 
-      const queryResult = await getAsyncResult(`${url}&id=${result.body.id}`, 1 * 1000 /*check every second*/, 15 /*max number of attempts*/);
+      const queryResult = await getAsyncResult(`${url}&id=${result.body.id}`, 1 * 1000 /*check every second*/, 100 /*max number of attempts*/);
 
       // console.log(queryResult);
 
@@ -118,6 +122,11 @@ function NewPlan() {
           mapping[loc.name] = loc.coordinates;
         })
         setLocationsMapping(mapping);
+
+        const fuseInstance = new Fuse(locations, {
+          keys: ['name'],
+        });
+        setFuse(fuseInstance);
       })
       .catch((error) => {
         // Handle errors here
@@ -130,10 +139,12 @@ function NewPlan() {
   }
 
   const handleLocationNameClick = (locationName) => {
-    const coordinates = locationsMapping[locationName];
-    if (coordinates) {
-      setActiveLocation(coordinates);
-      console.log(activeLocation)
+    if (fuse) {
+      const searchResults = fuse.search(locationName);
+      if (searchResults.length > 0) {
+        const coordinates = searchResults[0].item.coordinates;
+        setActiveLocation(coordinates);
+      }
     }
   }
 
@@ -151,7 +162,7 @@ function NewPlan() {
                 <p>
                   <strong>Event:</strong> {itinerary[date][time].event}
                 </p>
-                <p onClick={() => handleLocationNameClick} style={{ cursor: "pointer" }}>
+                <p onClick={() => handleLocationNameClick(itinerary[date][time].location)} style={{ cursor: "pointer" }}>
                   <strong>Location:</strong> {itinerary[date][time].location}
                 </p>
               </div>

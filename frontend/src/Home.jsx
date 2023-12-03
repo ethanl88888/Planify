@@ -131,7 +131,7 @@ function Home() {
       `
 
       let inputForGPT = JSON.stringify({
-        "model": "gpt-4-1106-preview",
+        "model": "gpt-3.5-turbo",
         "messages": [
           {
             "role": "system",
@@ -146,8 +146,8 @@ function Home() {
                         You are to go into detail for each activity's event field based on the general activities given to you in the user input.
                         For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
                         { "yyyy-mm-dd": { "hh:mm AM/PM": { "event": "Event description", "location": "street address, neighborhood, city, county, state, postcode, country" } }
-                        The event should be descriptive, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
-                        If you are unable to give the full address of a location, you do not need to fill out the first portion of the location format.
+                        The event should be very descriptive, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
+                        If you are unable to give the full address of a location, you can choose to cut out as much of the left portion of the location format. However, you must provide city, county, state, postcode, country as a bare minimum.
                       `
           }
         ]
@@ -170,14 +170,15 @@ function Home() {
     
         // Split the message into lines
         const lines = assistantMessage.split('\n');
+        if (lines[0] == '```json') {
+          // Remove the first and last lines
+          assistantMessage = lines.slice(1, -1).join('\n');
+        }
     
-        // Remove the first and last lines
-        const modifiedAssistantMessage = lines.slice(1, -1).join('\n');
-    
-        console.log(modifiedAssistantMessage); // Log the modified message
+        console.log(assistantMessage); // Log the modified message
     
         // Update the state or perform any other actions with the modified message
-        navigate('/new-plan', { state: { assistantMessage: modifiedAssistantMessage } });
+        navigate('/new-plan', { state: { assistantMessage: assistantMessage } });
       })
       .catch((error) => {
         console.log(error);
