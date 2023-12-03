@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Bar from './components/Bar';
-import { Box, Heading, VStack, Text, Button } from '@chakra-ui/react';
+import { Box, Heading, VStack, Text, Button, Image } from '@chakra-ui/react';
 import axios from 'axios';
 
 const MyPlans = () => {
   const [itineraries, setItineraries] = useState([]);
   const token = localStorage.getItem('token');
-
+  const navigate = useNavigate();
   useEffect(() => {
     // Fetch user itineraries using the /user-itineraries endpoint
     const fetchItineraries = async () => {
       try {
         const response = await axios.get(`http://localhost:3003/user-itineraries?token=${token}`);
-        console.log('API Response:', response.data); // Log the API response
+        // console.log('API Response:', response.data); // Log the API response
         setItineraries(response.data.itineraries);
       } catch (error) {
         console.error('Error fetching itineraries:', error);
@@ -23,28 +23,59 @@ const MyPlans = () => {
     fetchItineraries();
   }, [token]);
 
-  console.log('Itineraries:', itineraries); // Log the itineraries array
+  // Sort itineraries by date_modified in descending order
+  const sortedItineraries = [...itineraries].sort((a, b) => {
+    const dateA = new Date(a.date_modified);
+    const dateB = new Date(b.date_modified);
+    return dateB - dateA;
+  });
+
+  const handleSubmit = async (itinerary_name) => {
+    try {
+      const response = await axios.get(`http://localhost:3003/user-itineraries?token=${token}`);
+
+      // Find the itinerary with the matching itinerary_name
+      const selectedItinerary = response.data.itineraries.find(
+        (itinerary) => itinerary.itinerary_name === itinerary_name
+      );
+
+      const plan = selectedItinerary.plan;
+      const locationsMapping = selectedItinerary.locationsMapping;
+
+      if (plan) {
+        navigate('/plan', { state: { assistantMessage: plan, mapping: locationsMapping } });
+
+        // Now you can use the selectedPlan as needed
+      } else {
+        console.error('Itinerary not found for the given itinerary_name:', itinerary_name);
+      }
+    } catch (error) {
+      console.error('Error fetching itinerary:', error);
+      // Handle the error, show a toast or any other appropriate action
+    }
+  }
 
   return (
     <>
-      <Bar /> {/* Include the Bar component */}
+      <Bar />
       <Box p={4}>
-        <Heading mb={4}>My Plans</Heading>
-        <VStack spacing={4} align="start">
-          {itineraries.map((itinerary) => (
-            <Box key={itinerary.id} borderWidth="1px" borderRadius="md" p={4} width="100%">
-              {/* Displaying information about each itinerary */}
-              <Text fontWeight="bold">Itinerary #{itinerary.itinerary_name}</Text>
-
-              {/* Additional details can be displayed based on your data structure */}
-              <Text>Plan: {itinerary.plan}</Text>
-
-              <Link to={`/itinerary/${itinerary.id}`}>
-                <Button colorScheme="blue" mt={4}>
-                  View Itinerary
-                </Button>
-              </Link>
-
+        <VStack spacing={4} justifySelf="center" marginTop="80px">
+          {sortedItineraries.map((itinerary) => (
+            <Box
+              display="flex"
+              borderWidth="2px"
+              borderRadius="15px"
+              p={4}
+              width="75%"
+              height="200px"
+              justifyContent="space-between"
+              onClick={() => handleSubmit(itinerary.itinerary_name)}
+              style={{ cursor: "pointer" }}
+              key={itinerary.itinerary_name} // Added a key prop
+              >
+              <Text fontWeight="bold">{itinerary.itinerary_name}</Text>
+              <Text>{itinerary.date_modified}</Text>
+              <Image src={itinerary.image_url} objectFit="scale-down" />
             </Box>
           ))}
         </VStack>

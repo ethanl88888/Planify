@@ -50,7 +50,7 @@ function Bar() {
     <Flex
       id="bar"
       width="100%"
-      height="7%"
+      height="60px"
       justifyContent="space-between"
       borderBottom="1px solid #6c6f85"
       position="fixed"

@@ -17,6 +17,7 @@ import {
   NumberDecrementStepper,
   Select,
   Button,
+  useToast
 } from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
 
@@ -54,6 +55,7 @@ function Home() {
   const [lastDay, setLastDay] = useState();
   const [budget, setBudget] = useState();
   const [numPeople, setNumPeople] = useState();
+  const toast = useToast();
 
   const updateDestinationName = (index, value) => {
     const newDestinations = [...destinations];
@@ -62,9 +64,22 @@ function Home() {
   };
 
   const updateDestinationDate = (index, dateVisiting) => {
-    const newDestinations = [...destinations];
-    newDestinations[index] = { id: index + 1, value: destinations[index].value, dateVisiting };
-    setDestinations(newDestinations);
+    // Check if firstDay and lastDay are set
+    if (firstDay && lastDay) {
+      const newDestinations = [...destinations];
+      newDestinations[index] = { id: index + 1, value: destinations[index].value, dateVisiting };
+      setDestinations(newDestinations);
+    } else {
+      // Show a toast notification
+      toast.error("Please set your trip's first and last day before updating each destination's date.", {
+        position: "top-center",
+        autoClose: 3000, // milliseconds
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
 
   const handleRemoveDestination = (index) => {
@@ -77,6 +92,25 @@ function Home() {
 
   const handleAddDestination = () => {
     setDestinations([...destinations, { id: destinations.length + 1, value: '', dateVisiting: '' }]);
+  };
+
+  const handleLastDayChange = (e) => {
+    const newLastDay = e.target.value;
+
+    // Perform the validation check
+    if (!firstDay || new Date(newLastDay) >= new Date(firstDay)) {
+      setLastDay(newLastDay);
+    } else {
+      // You can display an error message or handle the invalid input in some way
+      toast.error("Last day cannot be before first day.", {
+        position: "top-center",
+        autoClose: 3000, // milliseconds
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
 
   const toggleDropdown = () => {
@@ -93,17 +127,6 @@ function Home() {
 
   const handleSubmit = () => {
     try {
-      // Construct the data object to send to the server
-      const dataForDatabase = {
-        token: localStorage.getItem('token'),
-        destinations: destinations,
-        firstDay: firstDay,
-        lastDay: lastDay,
-        budget: budget,
-        numPeople: numPeople,
-        activities: selectedActivities,
-      };
-
       const dataForGPT = `
         Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
         First Day of Overall Trip: ${firstDay},
@@ -150,18 +173,21 @@ function Home() {
       axios.request(config)
       .then((response) => {
         const assistantMessage = response.data.choices[0].message.content;
-    
+        const modifiedAssistantMessage = '';
+        const useModified = false;
+
         // Split the message into lines
         const lines = assistantMessage.split('\n');
         if (lines[0] == '```json') {
           // Remove the first and last lines
-          assistantMessage = lines.slice(1, -1).join('\n');
+          modifiedAssistantMessage = lines.slice(1, -1).join('\n');
+          useModified = true;
         }
     
         console.log(assistantMessage); // Log the modified message
     
         // Update the state or perform any other actions with the modified message
-        navigate('/new-plan', { state: { assistantMessage: assistantMessage } });
+        navigate('/plan', { state: { assistantMessage: useModified ? modifiedAssistantMessage : assistantMessage } });
       })
       .catch((error) => {
         console.log(error);
@@ -220,7 +246,7 @@ function Home() {
               </Flex>
               <Flex flexDirection="column" flex="1" p={5}>
                 <Text>Last Day</Text>
-                <Input placeholder="Last Day" type="date" value={lastDay} onChange={(e) => setLastDay(e.target.value)} />
+                <Input placeholder="Last Day" type="date" value={lastDay} onChange={handleLastDayChange} disabled={!firstDay}/>
               </Flex>
             </Flex>
             <Flex id="budget-input" flexDirection="column" mt={-5} p={5}>

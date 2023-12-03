@@ -7,30 +7,30 @@ import Home from './Home';
 import Login from './Login';
 import Signup from './Signup';
 import MyPlans from './MyPlans';
-import NewPlan from './NewPlan';
+import Plan from './Plan';
 import Test from './test';
 
 function App() {
   const router = createBrowserRouter([
     {
       path: '/',
-      element: <Home/>
+      element: <Home />
     },
     {
       path: '/login',
-      element: <Login/>
+      element: <Login />
     },
     {
       path: '/signup',
-      element: <Signup/>
+      element: <Signup />
     },
     {
       path: '/my-plans',
-      element: <MyPlans/>
+      element: <MyPlans />
     },
     {
-      path: '/new-plan',
-      element: <NewPlan/>
+      path: '/plan',
+      element: <Plan/>
     },
     {
       path: '/test',

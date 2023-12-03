@@ -75,7 +75,7 @@ const MapWithMarkers = ({ destinations, activeLocation }) => {
       map.flyTo({
         center: offsetCoordinate(activeLocation, 12),
         zoom: 12,
-        speed: 0.5,
+        speed: 1,
         essential: true,
       });
     }
