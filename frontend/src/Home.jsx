@@ -173,8 +173,8 @@ function Home() {
       axios.request(config)
       .then((response) => {
         const assistantMessage = response.data.choices[0].message.content;
-        const modifiedAssistantMessage = '';
-        const useModified = false;
+        let modifiedAssistantMessage = '';
+        let useModified = false;
 
         // Split the message into lines
         const lines = assistantMessage.split('\n');
