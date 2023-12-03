@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MapWithMarkers from './components/EmbededMap';
 import Bar from './components/Bar';
-import { Box } from '@chakra-ui/react';
+import { Box, Button, Input, useToast } from '@chakra-ui/react';
 import Fuse from 'fuse.js';
+import axios from 'axios';
 
 const geoapifyKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
 
@@ -13,6 +14,8 @@ function NewPlan() {
   const [activeLocation, setActiveLocation] = useState(null)
   const [locationsMapping, setLocationsMapping] = useState({})
   const [fuse, setFuse] = useState(null);  // Add this line
+  const navigate = useNavigate();
+  const toast = useToast();
 
   const assistantMessage = location.state?.assistantMessage || null;
   if (assistantMessage == null) {
@@ -148,27 +151,97 @@ function NewPlan() {
     }
   }
 
+  const handleSubmit = async () => {
+    const itinerary_name = document.getElementById('planNameInput').value;
+    const storedToken = localStorage.getItem('token');
+  
+    if (!storedToken) {
+      toast({
+        title: 'Error: You must be logged in to save a plan',
+        status: 'error',
+        duration: 5000,
+        isClosable: true
+      });
+      return;
+    }
+    if (!itinerary_name) {
+      toast({
+        title: 'Error: Plan must have a name before saving',
+        status: 'error',
+        duration: 5000,
+        isClosable: true
+      });
+      return;
+    }
+  
+    try {
+      const response = await axios.post('http://localhost:3003/create-itinerary', {
+        token: storedToken,
+        itinerary_name: itinerary_name,
+        plan: JSON.stringify(itinerary), // Assuming itinerary is an object
+      });
+  
+      // Handle success, you can show a success toast or redirect the user
+      toast({
+        title: 'Success',
+        description: 'Itinerary saved successfully.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true
+      });
+
+      navigate('/my-plans');
+  
+      // Optionally, you can redirect the user to a different page after successful save
+      // history.push('/success-page');
+    } catch (error) {
+      // Handle errors from the server
+      console.error('Error saving itinerary:', error);
+  
+      // Show an error toast
+      toast({
+        title: 'Error',
+        description: 'An error occurred while saving the itinerary.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true
+      });
+    }
+  };  
+
   return (
     <div id="new-plan">
       <Bar />
       <MapWithMarkers destinations={locationData} activeLocation={activeLocation} />
-      <Box position="fixed" top="12%" right="2%" width="42%" height="83%" borderWidth="3px" borderRadius="12px" overflow="scroll" bgColor="white">
-        {Object.keys(itinerary).map((date) => (
-          <div key={date}>
-            <h2>{date}</h2>
-            {Object.keys(itinerary[date]).map((time) => (
-              <div key={time}>
-                <h3>{time}</h3>
-                <p>
-                  <strong>Event:</strong> {itinerary[date][time].event}
-                </p>
-                <p onClick={() => handleLocationNameClick(itinerary[date][time].location)} style={{ cursor: "pointer" }}>
-                  <strong>Location:</strong> {itinerary[date][time].location}
-                </p>
-              </div>
-            ))}
-          </div>
-        ))}
+      <Box display="flex" flexDir="column" padding="42px" position="fixed" top="12%" right="2%" width="42%" height="83%" borderWidth="3px" borderRadius="12px" overflow="scroll" bgColor="white">
+        <Box display="flex" flexDir="row">
+          <Input id="planNameInput" placeholder="Give your plan a name" />
+          <Button
+            mb={6}
+            bg="#209fb5"
+            onClick={handleSubmit}
+          >
+            Save Itinerary
+          </Button>
+        </Box>
+        <Box>
+          {Object.keys(itinerary).map((date) => (
+            <div key={date}>
+              <h2>{date}</h2>
+              {Object.keys(itinerary[date]).map((time) => (
+                <div key={time}>
+                  <h3>{time}</h3>
+                  <p>
+                    <strong>Event:</strong> {itinerary[date][time].event}
+                  </p>
+                  <p onClick={() => handleLocationNameClick(itinerary[date][time].location)} style={{ cursor: "pointer" }}>
+                    <strong>Location:</strong> {itinerary[date][time].location}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ))}
+        </Box>
       </Box>
     </div>
   );

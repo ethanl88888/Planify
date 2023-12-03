@@ -11,7 +11,6 @@ const MapWithMarkers = ({ destinations, activeLocation }) => {
 
   const offsetCoordinate = (coordinates, zoom) => {
     const offsetXPercent = 1 + (3 * (10 ** (-zoom / 3)));
-    console.log(offsetXPercent);
     const [x, y] = coordinates;
     const offsetX = x * offsetXPercent;
     return [offsetX, y];

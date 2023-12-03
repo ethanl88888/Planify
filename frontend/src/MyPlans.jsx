@@ -35,26 +35,6 @@ const MyPlans = () => {
             <Box key={itinerary.id} borderWidth="1px" borderRadius="md" p={4} width="100%">
               {/* Displaying information about each itinerary */}
               <Text fontWeight="bold">Itinerary #{itinerary.itinerary_name}</Text>
-              <Text>First Day: {itinerary.firstDay}</Text>
-              <Text>Last Day: {itinerary.lastDay}</Text>
-              <Text>Budget: {itinerary.budget}</Text>
-              <Text>Number of People: {itinerary.numPeople}</Text>
-
-              {/* Displaying information about activities */}
-              <Text>Activities:</Text>
-              {itinerary.activities.map((activity, index) => (
-                <Text key={index}>{activity}</Text>
-              ))}
-
-              {/* Displaying information about destinations */}
-              <Text fontWeight="bold">Destinations:</Text>
-              <VStack align="start" spacing={0}>
-                {itinerary.destinations.map((destination, index) => (
-                  <Text key={index}>
-                    {destination.value} ({destination.dateVisiting})
-                  </Text>
-                ))}
-              </VStack>
 
               {/* Additional details can be displayed based on your data structure */}
               <Text>Plan: {itinerary.plan}</Text>

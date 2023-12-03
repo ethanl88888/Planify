@@ -104,23 +104,6 @@ function Home() {
         activities: selectedActivities,
       };
 
-      console.log('Sending data:', dataForDatabase); // Log the data being sent
-      // Make a POST request to the server
-      axios
-        .post('http://localhost:3003/create-itinerary', dataForDatabase, {
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        })
-        .then((response) => {
-          console.log('Server response:', response.data); // Log the server response
-          // Handle any additional logic or UI updates as needed
-        })
-        .catch((error) => {
-          console.error('Error submitting itinerary:', error);
-          // Handle errors or display an error message to the user
-        });
-
       const dataForGPT = `
         Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
         First Day of Overall Trip: ${firstDay},
