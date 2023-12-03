@@ -121,7 +121,7 @@ function Home() {
           // Handle errors or display an error message to the user
         });
 
-      /*const dataForGPT = `
+      const dataForGPT = `
         Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
         First Day of Overall Trip: ${firstDay},
         Last Day of Overall Trip: ${lastDay},
@@ -181,7 +181,7 @@ function Home() {
       })
       .catch((error) => {
         console.log(error);
-      });*/
+      });
     } catch (error) {
       console.error('Error in handleSubmit:', error);
     }
