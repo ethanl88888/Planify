@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Bar from './components/Bar';
-import { Box, Heading, VStack, Text } from '@chakra-ui/react';
+import { Box, Heading, VStack, Text, Button } from '@chakra-ui/react';
 import axios from 'axios';
 
 const MyPlans = () => {
@@ -33,11 +34,11 @@ const MyPlans = () => {
           {itineraries.map((itinerary) => (
             <Box key={itinerary.id} borderWidth="1px" borderRadius="md" p={4} width="100%">
               {/* Displaying information about each itinerary */}
-              <Text fontWeight="bold">Itinerary #{itinerary.id}</Text>
+              <Text fontWeight="bold">Itinerary #{itinerary.itinerary_name}</Text>
               <Text>First Day: {itinerary.firstDay}</Text>
               <Text>Last Day: {itinerary.lastDay}</Text>
               <Text>Budget: {itinerary.budget}</Text>
-              <Text>Number of People: {itinerary.people}</Text>
+              <Text>Number of People: {itinerary.numPeople}</Text>
 
               {/* Displaying information about activities */}
               <Text>Activities:</Text>
@@ -50,13 +51,20 @@ const MyPlans = () => {
               <VStack align="start" spacing={0}>
                 {itinerary.destinations.map((destination, index) => (
                   <Text key={index}>
-                    {destination.destination} ({destination.dateVisiting})
+                    {destination.value} ({destination.dateVisiting})
                   </Text>
                 ))}
               </VStack>
 
               {/* Additional details can be displayed based on your data structure */}
               <Text>Plan: {itinerary.plan}</Text>
+
+              <Link to={`/itinerary/${itinerary.id}`}>
+                <Button colorScheme="blue" mt={4}>
+                  View Itinerary
+                </Button>
+              </Link>
+
             </Box>
           ))}
         </VStack>

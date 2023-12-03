@@ -16,6 +16,7 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Select,
+  Button,
 } from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
 
@@ -106,7 +107,11 @@ function Home() {
       console.log('Sending data:', dataForDatabase); // Log the data being sent
       // Make a POST request to the server
       axios
-        .post('http://localhost:3003/create-itinerary', dataForDatabase)
+        .post('http://localhost:3003/create-itinerary', dataForDatabase, {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
         .then((response) => {
           console.log('Server response:', response.data); // Log the server response
           // Handle any additional logic or UI updates as needed
@@ -116,7 +121,7 @@ function Home() {
           // Handle errors or display an error message to the user
         });
 
-      const dataForGPT = `
+      /*const dataForGPT = `
         Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
         First Day of Overall Trip: ${firstDay},
         Last Day of Overall Trip: ${lastDay},
@@ -176,7 +181,7 @@ function Home() {
       })
       .catch((error) => {
         console.log(error);
-      });
+      });*/
     } catch (error) {
       console.error('Error in handleSubmit:', error);
     }
@@ -236,7 +241,7 @@ function Home() {
             </Flex>
             <Flex id="budget-input" flexDirection="column" mt={-5} p={5}>
               <Text>Budget</Text>
-              <NumberInput min={0} value={budget} onChange={(e) => setBudget(e)}>
+              <NumberInput min={0} value={budget} onChange={(e) => setBudget(parseFloat(e))}>
                 <NumberInputField />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
@@ -246,7 +251,7 @@ function Home() {
             </Flex>
             <Flex id="num-people-input" flexDirection="column" mt={-5} p={5}>
               <Text>Number of People</Text>
-              <NumberInput min={0} value={numPeople} onChange={(e) => setNumPeople(e)}>
+              <NumberInput min={0} value={numPeople} onChange={(e) => setNumPeople(parseInt(e))}>
                 <NumberInputField />
                 <NumberInputStepper>
                   <NumberIncrementStepper />
@@ -271,7 +276,13 @@ function Home() {
               </Select>
             </Flex>
             <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5}>
-              <button onClick={handleSubmit}>Submit Itinerary</button>
+              <Button
+                mb={6}
+                bg="#209fb5"
+                onClick={handleSubmit}
+              >
+                Submit Itinerary
+              </Button>
             </Flex>
           </Flex>
         </Flex>
