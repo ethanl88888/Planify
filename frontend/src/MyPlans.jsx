@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Bar from './components/Bar';
-import { Box, Heading, VStack, Text, Button, Image } from '@chakra-ui/react';
+import { Box, Heading, VStack, Text, Button, Image, Flex } from '@chakra-ui/react';
 import axios from 'axios';
+import { ChakraProvider } from "@chakra-ui/react";
 
 const MyPlans = () => {
   const [itineraries, setItineraries] = useState([]);
@@ -29,6 +30,8 @@ const MyPlans = () => {
     const dateB = new Date(b.date_modified);
     return dateB - dateA;
   });
+
+  
 
   const handleSubmit = async (itinerary_name) => {
     try {
@@ -61,27 +64,49 @@ const MyPlans = () => {
     <>
       <Bar />
       <Box p={4}>
-        <VStack spacing={4} justifySelf="center" marginTop="80px">
-          {sortedItineraries.map((itinerary) => (
-            <Box
-              display="flex"
-              borderWidth="2px"
-              borderRadius="15px"
-              p={4}
-              width="75%"
-              height="200px"
-              justifyContent="space-between"
-              onClick={() => handleSubmit(itinerary.itinerary_name)}
-              style={{ cursor: "pointer" }}
-              key={itinerary.itinerary_name} // Added a key prop
+        <Flex padding = "30px" direction="row" flexWrap="wrap" justifyContent="space-between" marginTop="80px">
+          {sortedItineraries.map((itinerary) => {
+            //format date 
+            const dateModified = new Date(itinerary.date_modified);
+            const formattedDate = `${dateModified.getFullYear()}-${(dateModified.getMonth() + 1).toString().padStart(2, '0')}-${dateModified.getDate().toString().padStart(2, '0')} ${dateModified.getHours().toString().padStart(2, '0')}:${dateModified.getMinutes().toString().padStart(2, '0')}:${dateModified.getSeconds().toString().padStart(2, '0')}`;
+
+            return (
+              <Box
+                key={itinerary.itinerary_name}
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                margin={2}
               >
-              <Text fontWeight="bold">{itinerary.itinerary_name}</Text>
-              <Text>{itinerary.date_modified}</Text>
-              <Text>{itinerary.id}</Text>
-              <Image src={itinerary.image_url} objectFit="scale-down" />
+              <Box
+                borderWidth="2px"
+                borderRadius="15px"
+                borderColor= "#209fb5"
+                p={4}
+                width="400px"
+                height="500px"
+                justifyContent="space-between"
+                display = "flex"
+                flexDirection = "column"
+                alignItems = "center"
+
+              >
+                <Text fontWeight="bold">{itinerary.itinerary_name}</Text>
+                <Image marginTop = "20px" src={itinerary.image_url} objectFit="scale-down" maxWidth="80%" maxHeight="80%" />
+                <Text marginTop = "15px">Last Modified: {formattedDate}</Text>
+                <Box display="flex" flexDirection="row" justifyContent="space-between" width="100%">
+                  <Button flex="1" padding="20px" color = "#209fb5"onClick={() => handleSubmit(itinerary.itinerary_name)} marginTop="15px" marginRight = "20px">
+                    Edit
+                  </Button>
+                  <Button flex="1" padding="20px" marginTop="15px" marginLeft ="20px" color="#209fb5">
+                    Delete
+                  </Button>
+                </Box>
+              </Box>
             </Box>
-          ))}
-        </VStack>
+            );
+          })}
+        </Flex>
       </Box>
     </>
   );

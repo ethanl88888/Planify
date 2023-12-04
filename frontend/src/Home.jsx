@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Bar from './components/Bar';
 import home_cover from '/home_cover.jpg';
+import home_cover2 from '/home_cover2.jpg';
 import {
   Box,
   Flex,
@@ -17,7 +18,8 @@ import {
   NumberDecrementStepper,
   Select,
   Button,
-  useToast
+  useToast,
+  Spinner
 } from '@chakra-ui/react';
 import LocationInput from './components/LocationInput';
 
@@ -55,6 +57,7 @@ function Home() {
   const [lastDay, setLastDay] = useState();
   const [budget, setBudget] = useState();
   const [numPeople, setNumPeople] = useState();
+  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
   const updateDestinationName = (index, value) => {
@@ -125,8 +128,16 @@ function Home() {
     }
   };
 
+<<<<<<< HEAD
   const handleSubmit = () => {
+    setIsLoading(true);
+
+=======
+  const [isLoading, setIsLoading] = useState(false);
+  const handleSubmit = async () => {
+>>>>>>> 8a7afd2a979531f700e8226fe61a297b9dff6750
     try {
+      setIsLoading(true);
       const dataForGPT = `
         Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
         First Day of Overall Trip: ${firstDay},
@@ -187,13 +198,22 @@ function Home() {
         console.log(assistantMessage); // Log the modified message
     
         // Update the state or perform any other actions with the modified message
+        setIsLoading(false);
         navigate('/plan', { state: { assistantMessage: useModified ? modifiedAssistantMessage : assistantMessage } });
       })
       .catch((error) => {
         console.log(error);
+
+        setIsLoading(false);
       });
     } catch (error) {
       console.error('Error in handleSubmit:', error);
+<<<<<<< HEAD
+
+=======
+    } finally{
+>>>>>>> 8a7afd2a979531f700e8226fe61a297b9dff6750
+      setIsLoading(false);
     }
   };
 
@@ -208,20 +228,20 @@ function Home() {
         </Heading>
       </Flex>
       <Box id="home-container" position="absolute" top="40%" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
-        <Flex id="home-main" flexDirection="row" maxHeight="80%">
+        <Flex id="home-main" flexDirection="row" maxHeight="80%" margin="30px">
           <Flex
             id="home-main-left"
             position="relative"
             flexDirection="column"
-            width="60%"
-            max-height="40%"
             alignItems="center"
             justifyContent="center"
             margin-top = "-50px"
+            flex="1"
+            marginLeft="50px"
           >
-            <Image src={home_cover} alt="Home Cover Image" boxSize="100%" objectFit="cover" height="100%" objectPosition="30 90%" zIndex="-1" marginTop="-20" marginRight= "-50"/>
+            <Image src={home_cover2} alt="Home Image" boxSize="100%" objectFit="cover" height="550px" objectPosition="30 90%" zIndex="-1" />
           </Flex>
-          <Flex id="home-main-right" margin="8%" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
+          <Flex id="home-main-right" flex="1" margin="8%" marginRight="20px" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
             {destinations.map((destination, index) => (
               <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row" p={7}>
                 <LocationInput onChange={(value) => updateDestinationName(index, value)} />
@@ -285,13 +305,14 @@ function Home() {
                 ))}
               </Select>
             </Flex>
-            <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5}>
+            <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5} style={{ backdropFilter: isLoading ? 'blur(5px)' : 'none' }}>
               <Button
                 mb={6}
                 bg="#209fb5"
                 onClick={handleSubmit}
+                isLoading={isLoading}
               >
-                Submit Itinerary
+                {isLoading ? 'Loading' : 'Submit Itinerary'}
               </Button>
             </Flex>
           </Flex>
