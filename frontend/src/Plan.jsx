@@ -46,10 +46,9 @@ function Plan() {
   useEffect(() => {
     async function fetchData() {
       try {
-        let mappingToUse;
 
         if (location.state?.mapping != null) {
-          mappingToUse = JSON.parse(location.state.mapping);
+          const mappingToUse = JSON.parse(location.state?.mapping);
           const locations = Object.entries(mappingToUse).map(([name, coordinates]) => ({
             name,
             coordinates,
@@ -57,16 +56,16 @@ function Plan() {
 
           setLocationData(locations.map((loc) => loc.coordinates));
 
-          const mapping = {};
-          locations.forEach((loc) => {
-            mapping[loc.name] = loc.coordinates;
-          });
-          setLocationsMapping(mapping);
+          // const mapping = {};
+          // locations.forEach((loc) => {
+          //   mapping[loc.name] = loc.coordinates;
+          // });
+          setLocationsMapping(mappingToUse);
 
           const fuseInstance = new Fuse(locations, {
             keys: ['name'],
           });
-          setFuse(fuseInstance);
+          setFuse(fuseInstance)
         } else {
           const url = `https://api.geoapify.com/v1/batch/geocode/search?apiKey=${geoapifyKey}`;
 
@@ -109,7 +108,7 @@ function Plan() {
             }
           }
 
-          async function fetchData1() {
+          async function fetchData() {
             try {
               const result = await fetch(url, {
                 method: "post",
@@ -141,7 +140,7 @@ function Plan() {
           }
 
           // Fetch data using the geocoding API
-          const queryResult = await fetchData1();
+          const queryResult = await fetchData();
 
           const locations = queryResult.map((location) => ({
             name: location.formatted,
@@ -175,6 +174,7 @@ function Plan() {
   }
 
   const handleLocationNameClick = (locationName) => {
+    console.log(locationsMapping)
     if (fuse) {
       const searchResults = fuse.search(locationName);
       if (searchResults.length > 0) {
@@ -433,7 +433,7 @@ function Plan() {
         ))}
       </Box>
     ));
-  }, [itinerary, editingBox]);
+  }, [itinerary, editingBox, fuse]);
 
   return (
     <div id="new-plan">
