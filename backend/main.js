@@ -57,7 +57,7 @@ app.get('/user-itineraries', (req, res) => {
     const userId = row.user_id;
 
     // Retrieve user itineraries from the database
-    const getItinerariesSql = 'SELECT date_modified, itinerary_name, plan, image_url, locationsMapping FROM itineraries WHERE user_id = ?';
+    const getItinerariesSql = 'SELECT id, date_modified, itinerary_name, plan, image_url, locationsMapping FROM itineraries WHERE user_id = ?';
 
     db.all(getItinerariesSql, [userId], (err, rows) => {
       if (err) {
@@ -67,6 +67,7 @@ app.get('/user-itineraries', (req, res) => {
       // Convert rows to a more structured format
       const formattedItineraries = rows.map((row) => {
         const itinerary = {
+          id: row.id,
           date_modified: row.date_modified,
           itinerary_name: row.itinerary_name,
           plan: row.plan,
@@ -83,7 +84,7 @@ app.get('/user-itineraries', (req, res) => {
 });
 
 app.post('/create-itinerary', express.json(), (req, res) => {
-  const { token, date_modified, itinerary_name, plan, image_url, locationsMapping } = req.body;
+  const { token, date_modified, itinerary_name, plan, image_url, locationsMapping, id } = req.body;
 
   // Retrieve user_id from session_tokens
   const getUserIdSql = 'SELECT user_id FROM session_tokens WHERE token = ?';
@@ -98,34 +99,39 @@ app.post('/create-itinerary', express.json(), (req, res) => {
 
     const userId = row.user_id;
 
-    // Check for existing itinerary with the same name
-    const checkExistingItinerarySql = 'SELECT id FROM itineraries WHERE user_id = ? AND itinerary_name = ?';
-    db.get(checkExistingItinerarySql, [userId, itinerary_name], (err, existingRow) => {
-      if (err) {
-        console.error(err.message);  // Log the error
-        return res.status(500).json({ error: err.message });
-      }
-      if (existingRow) {
-        // Conflict: Itinerary name already exists for this user
-        return res.status(409).json({ error: 'Itinerary name already exists.' });
-      }
+    if (id != null) {
+      // Update existing itinerary
+      const updateItinerarySql = 'UPDATE itineraries SET date_modified = ?, itinerary_name = ?, plan = ?, image_url = ?, locationsMapping = ? WHERE id = ? AND user_id = ?';
 
-      // Insert itinerary into the itineraries table
-      const insertItinerarySql = 'INSERT INTO itineraries (user_id, date_modified, itinerary_name, plan, image_url, locationsMapping) VALUES (?, ?, ?, ?, ?, ?)';
-      
-      db.run(insertItinerarySql, [userId, date_modified, itinerary_name, plan, image_url, locationsMapping], function(err) {
+      db.run(updateItinerarySql, [date_modified, itinerary_name, plan, image_url, locationsMapping, id, userId], function(err) {
         if (err) {
           console.error(err.message);  // Log the error
           return res.status(500).json({ error: err.message });
         }
 
-        // const itineraryId = this.lastID; // Get the last inserted itinerary ID
+        if (this.changes === 0) {
+          // No rows were updated, indicating no matching itinerary for the given id and user_id
+          return res.status(404).json({ error: 'Itinerary not found for the given id and user_id.' });
+        }
 
+        return res.json({ success: 'Itinerary updated.' });
+      });
+    } else {
+      // Insert new itinerary
+      const insertItinerarySql = 'INSERT INTO itineraries (user_id, date_modified, itinerary_name, plan, image_url, locationsMapping) VALUES (?, ?, ?, ?, ?, ?)';
+    
+      db.run(insertItinerarySql, [userId, date_modified, itinerary_name, plan, image_url, locationsMapping], function(err) {
+        if (err) {
+          console.error(err.message);  // Log the error
+          return res.status(500).json({ error: err.message });
+        }
+  
         return res.json({ success: 'Itinerary created.' });
       });
-    });
+    }
   });
 });
+
 
 // allow log in with email and password
 app.post('/login', express.json(), (req, res) => {
