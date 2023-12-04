@@ -62,7 +62,7 @@ const MyPlans = () => {
     <>
       <Bar />
       <Box p={4}>
-        <Flex padding = "30px" direction="row" flexWrap="wrap" justifyContent="space-between" marginTop="80px">
+        <Flex direction="row" flexWrap="wrap" justifyContent="space-between" marginTop="80px">
           {sortedItineraries.map((itinerary) => {
             //format date 
             const dateModified = new Date(itinerary.date_modified);
@@ -74,7 +74,9 @@ const MyPlans = () => {
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
-                margin={2}
+                marginTop="40px"
+                marginLeft = "30px"
+                marginRight = "30px"
               >
               <Box
                 borderWidth="2px"
@@ -87,7 +89,6 @@ const MyPlans = () => {
                 display = "flex"
                 flexDirection = "column"
                 alignItems = "center"
-
               >
                 <Text fontWeight="bold">{itinerary.itinerary_name}</Text>
                 <Image marginTop = "20px" src={itinerary.image_url} objectFit="scale-down" maxWidth="80%" maxHeight="80%" />
