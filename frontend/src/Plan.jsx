@@ -40,6 +40,7 @@ function Plan() {
   const [itineraryDisplay, setItineraryDisplay] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [editingBox, setEditingBox] = useState(null);
+  const [addingEvent, setAddingEvent] = useState(null);
   const [addingBox, setAddingBox] = useState(null);
 
   useEffect(() => {
@@ -184,7 +185,7 @@ function Plan() {
   }
 
   const handleAddClick = () => {
-    setEditingEvent(editingEvent ? false : true)
+    setAddingEvent(addingEvent ? false : true)
     setAddingBox();
   }
 
@@ -352,7 +353,7 @@ function Plan() {
   }
 
   const addDisplay = () => {
-    if (editingEvent) {
+    if (addingEvent) {
       return (
         <Box>
           <Input type="time" />

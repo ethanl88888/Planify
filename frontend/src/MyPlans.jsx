@@ -47,6 +47,7 @@ const MyPlans = () => {
       // Fetch and update the itineraries list after deletion
       const updatedItineraries = await axios.get(`http://localhost:3003/user-itineraries?token=${localStorage.getItem('token')}`);
       setItineraries(updatedItineraries.data.itineraries);
+      
     } catch (error) {
       console.error('Error deleting itinerary:', error);
       // Handle the error, show a toast or any other appropriate action
@@ -84,7 +85,7 @@ const MyPlans = () => {
     <>
       <Bar />
       <Box p={4}>
-        <Flex direction="row" flexWrap="wrap" justifyContent="space-between" marginTop="80px">
+        <Flex padding = "30px" direction="row" flexWrap="wrap" justifyContent="space-between" marginTop="80px">
           {sortedItineraries.map((itinerary) => {
             //format date 
             const dateModified = new Date(itinerary.date_modified);
@@ -96,9 +97,7 @@ const MyPlans = () => {
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
-                marginTop="40px"
-                marginLeft = "30px"
-                marginRight = "30px"
+                margin={2}
               >
               <Box
                 borderWidth="2px"
@@ -111,6 +110,7 @@ const MyPlans = () => {
                 display = "flex"
                 flexDirection = "column"
                 alignItems = "center"
+
               >
                 <Text fontWeight="bold">{itinerary.itinerary_name}</Text>
                 <Image marginTop = "20px" src={itinerary.image_url} objectFit="scale-down" maxWidth="80%" maxHeight="80%" />
