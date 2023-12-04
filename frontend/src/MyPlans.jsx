@@ -9,6 +9,7 @@ const MyPlans = () => {
   const [itineraries, setItineraries] = useState([]);
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
+
   useEffect(() => {
     // Fetch user itineraries using the /user-itineraries endpoint
     const fetchItineraries = async () => {
@@ -16,6 +17,7 @@ const MyPlans = () => {
         const response = await axios.get(`http://localhost:3003/user-itineraries?token=${token}`);
         // console.log('API Response:', response.data); // Log the API response
         setItineraries(response.data.itineraries);
+        console.log(response.data.itineraries)
       } catch (error) {
         console.error('Error fetching itineraries:', error);
       }
@@ -31,8 +33,26 @@ const MyPlans = () => {
     return dateB - dateA;
   });
 
+  const handleDelete = async (itineraryId) => {
+    try {
+      const response = await axios.delete('http://localhost:3003/delete-itinerary', {
+        data: {
+          token: localStorage.getItem('token'),
+          id: itineraryId,
+        },
+      });
   
-
+      console.log(response.data); // Log success message or handle accordingly
+  
+      // Fetch and update the itineraries list after deletion
+      const updatedItineraries = await axios.get(`http://localhost:3003/user-itineraries?token=${localStorage.getItem('token')}`);
+      setItineraries(updatedItineraries.data.itineraries);
+    } catch (error) {
+      console.error('Error deleting itinerary:', error);
+      // Handle the error, show a toast or any other appropriate action
+    }
+  };
+  
   const handleSubmit = async (itinerary_name) => {
     try {
       const response = await axios.get(`http://localhost:3003/user-itineraries?token=${token}`);
@@ -98,7 +118,7 @@ const MyPlans = () => {
                   <Button flex="1" padding="20px" color = "#209fb5"onClick={() => handleSubmit(itinerary.itinerary_name)} marginTop="15px" marginRight = "20px">
                     Edit
                   </Button>
-                  <Button flex="1" padding="20px" marginTop="15px" marginLeft ="20px" color="#209fb5">
+                  <Button flex="1" padding="20px" onClick={() => handleDelete(itinerary.id)} marginTop="15px" marginLeft ="20px" color="#209fb5">
                     Delete
                   </Button>
                 </Box>

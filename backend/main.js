@@ -132,6 +132,41 @@ app.post('/create-itinerary', express.json(), (req, res) => {
   });
 });
 
+// Add a new endpoint for deleting itineraries
+app.delete('/delete-itinerary', express.json(), (req, res) => {
+  const { token, id } = req.body;
+
+  // Retrieve user_id from session_tokens
+  const getUserIdSql = 'SELECT user_id FROM session_tokens WHERE token = ?';
+  db.get(getUserIdSql, [token], (err, row) => {
+    if (err) {
+      console.error(err.message);  // Log the error
+      return res.status(500).json({ error: err.message });
+    }
+    if (!row) {
+      return res.status(401).json({ error: 'Invalid token.' });
+    }
+
+    const userId = row.user_id;
+
+    // Delete the itinerary with the given id and user_id
+    const deleteItinerarySql = 'DELETE FROM itineraries WHERE id = ? AND user_id = ?';
+
+    db.run(deleteItinerarySql, [id, userId], function(err) {
+      if (err) {
+        console.error(err.message);  // Log the error
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (this.changes === 0) {
+        // No rows were deleted, indicating no matching itinerary for the given id and user_id
+        return res.status(404).json({ error: 'Itinerary not found for the given id and user_id.' });
+      }
+
+      return res.json({ success: 'Itinerary deleted.' });
+    });
+  });
+});
 
 // allow log in with email and password
 app.post('/login', express.json(), (req, res) => {
