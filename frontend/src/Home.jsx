@@ -55,6 +55,7 @@ function Home() {
   const [lastDay, setLastDay] = useState();
   const [budget, setBudget] = useState();
   const [numPeople, setNumPeople] = useState();
+  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
   const updateDestinationName = (index, value) => {
@@ -126,6 +127,8 @@ function Home() {
   };
 
   const handleSubmit = () => {
+    setIsLoading(true);
+
     try {
       const dataForGPT = `
         Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
@@ -187,13 +190,18 @@ function Home() {
         console.log(assistantMessage); // Log the modified message
     
         // Update the state or perform any other actions with the modified message
+        setIsLoading(false);
         navigate('/plan', { state: { assistantMessage: useModified ? modifiedAssistantMessage : assistantMessage } });
       })
       .catch((error) => {
         console.log(error);
+
+        setIsLoading(false);
       });
     } catch (error) {
       console.error('Error in handleSubmit:', error);
+
+      setIsLoading(false);
     }
   };
 
@@ -290,6 +298,7 @@ function Home() {
                 mb={6}
                 bg="#209fb5"
                 onClick={handleSubmit}
+                isLoading={isLoading}
               >
                 Submit Itinerary
               </Button>
