@@ -128,14 +128,8 @@ function Home() {
     }
   };
 
-<<<<<<< HEAD
   const handleSubmit = () => {
     setIsLoading(true);
-
-=======
-  const [isLoading, setIsLoading] = useState(false);
-  const handleSubmit = async () => {
->>>>>>> 8a7afd2a979531f700e8226fe61a297b9dff6750
     try {
       setIsLoading(true);
       const dataForGPT = `
@@ -208,11 +202,6 @@ function Home() {
       });
     } catch (error) {
       console.error('Error in handleSubmit:', error);
-<<<<<<< HEAD
-
-=======
-    } finally{
->>>>>>> 8a7afd2a979531f700e8226fe61a297b9dff6750
       setIsLoading(false);
     }
   };
