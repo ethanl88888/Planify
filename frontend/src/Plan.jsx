@@ -174,7 +174,6 @@ function Plan() {
   }
 
   const handleLocationNameClick = (locationName) => {
-    console.log(locationsMapping)
     if (fuse) {
       const searchResults = fuse.search(locationName);
       if (searchResults.length > 0) {
@@ -438,7 +437,7 @@ function Plan() {
   return (
     <div id="new-plan">
       <Bar />
-      <MapWithMarkers destinations={locationData} activeLocation={activeLocation} />
+      <MapWithMarkers destinations={locationsMapping} activeLocation={activeLocation} />
       <Box display="flex" flexDir="column" padding="42px" position="fixed" top="12%" right="2%" width="42%" height="83%" borderWidth="3px" borderRadius="12px" overflow="scroll" bgColor="white">
         <Box display="flex" flexDir="row">
           <Input id="planNameInput" placeholder="Give your plan a name" />
