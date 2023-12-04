@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MapWithMarkers from './components/EmbededMap';
 import Bar from './components/Bar';
-import { Box, Button, Input, useToast } from '@chakra-ui/react';
+import { Box, Button, Input, useToast, IconButton, Text } from '@chakra-ui/react';
+import { AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import Fuse from 'fuse.js';
 import axios from 'axios';
+import LocationInput from './components/LocationInput';
+import $ from "jquery";
 
 const geoapifyKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
 const pexelsKey = import.meta.env.VITE_PEXELS_API_KEY;
@@ -15,12 +18,13 @@ function Plan() {
   const toast = useToast();
 
   const assistantMessage = location.state?.assistantMessage;
+  const id = location.state?.id;
 
   if (assistantMessage == null) {
     return <p>Error: Itinerary not generated</p>
   }
 
-  const itinerary = JSON.parse(assistantMessage);
+  const [itinerary, setItinerary] = useState(JSON.parse(assistantMessage));
   const uniqueLocations = Array.from(
     new Set(
       Object.values(itinerary).flatMap((timeSlots) =>
@@ -30,9 +34,13 @@ function Plan() {
   );
 
   const [locationData, setLocationData] = useState([]);
-  const [activeLocation, setActiveLocation] = useState(null)
-  const [locationsMapping, setLocationsMapping] = useState({})
+  const [activeLocation, setActiveLocation] = useState(null);
+  const [locationsMapping, setLocationsMapping] = useState({});
   const [fuse, setFuse] = useState(null);
+  const [itineraryDisplay, setItineraryDisplay] = useState(null);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [editingBox, setEditingBox] = useState(null);
+  const [addingBox, setAddingBox] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -175,6 +183,34 @@ function Plan() {
     }
   }
 
+  const handleAddClick = () => {
+    setEditingEvent(editingEvent ? false : true)
+    setAddingBox();
+  }
+
+  const handleEditClick = (date, time) => {
+    // let updatedItinerary = { ...itinerary };
+    setEditingEvent(editingEvent ? false : true)
+    setEditingBox({ date, time });
+    // setItinerary(updateItinerary);
+  }
+
+  const handleDeleteClick = (date, time) => {
+    // Create a copy of the itinerary
+    let updatedItinerary = { ...itinerary };
+
+    // Delete the specified item
+    delete updatedItinerary[date][time];
+    console.log(updatedItinerary[date])
+
+    if (Object.keys(updatedItinerary[date]).length == 0) {
+      delete updatedItinerary[date];
+    }
+
+    // Update the state to trigger a re-render
+    setItinerary(updatedItinerary);
+  };
+
   const handleSubmit = async () => {
     const itinerary_name = document.getElementById('planNameInput').value;
     const storedToken = localStorage.getItem('token');
@@ -198,86 +234,205 @@ function Plan() {
       return;
     }
   
-    try {
-      let config = {
-        method: 'get',
-        maxBodyLength: Infinity,
-        url: `https://api.pexels.com/v1/search?query=${uniqueLocations[0]}&orientation=square&per_page=50`,
-        headers: {
-          'Authorization': pexelsKey,
-        }
-      };
-    
-      axios.request(config)
-        .then((response) => {
-          const randomIndex = Math.floor(Math.random() * Math.min(response.data.total_results, 50)) - 1;
-          console.log(response.data)
-          console.log(randomIndex)
-          // Get the original image URL from the randomly selected photo
-          const image_url = response.data.photos[randomIndex].src.original;
-    
-          // Use the image_url in the rest of your code
-          console.log(image_url);
-    
-          // Now, you can use the image_url in the axios.post request
-          axios.post('http://localhost:3003/create-itinerary', {
-            token: storedToken,
-            date_modified: new Date(),
-            itinerary_name: itinerary_name,
-            plan: JSON.stringify(itinerary),
-            image_url: image_url,
-            locationsMapping: JSON.stringify(locationsMapping)
-          })
-            .then((response) => {
-              // Handle success
-              toast({
-                title: 'Success',
-                description: 'Itinerary saved successfully.',
-                status: 'success',
-                duration: 5000,
-                isClosable: true
-              });
-    
-              navigate('/my-plans');
+    if (location.state?.image_url == null) {
+      try {
+        let config = {
+          method: 'get',
+          maxBodyLength: Infinity,
+          url: `https://api.pexels.com/v1/search?query=${uniqueLocations[0]}&orientation=square&per_page=50`,
+          headers: {
+            'Authorization': pexelsKey,
+          }
+        };
+        axios.request(config)
+          .then((response) => {
+            const randomIndex = Math.floor(Math.random() * Math.min(response.data.total_results, 50)) - 1;
+            // Get the original image URL from the randomly selected photo
+            const image_url = response.data.photos[randomIndex].src.original;
+      
+            // Use the image_url in the rest of your code
+            console.log(image_url);
+
+            // Now, you can use the image_url in the axios.post request
+            axios.post('http://localhost:3003/create-itinerary', {
+              token: storedToken,
+              date_modified: new Date(),
+              itinerary_name: itinerary_name,
+              plan: JSON.stringify(itinerary),
+              image_url: image_url,
+              locationsMapping: JSON.stringify(locationsMapping),
+              id: id
             })
-            .catch((error) => {
-              // Handle errors from the server
-              console.error('Error saving itinerary:', error);
-    
-              // Show an error toast
-              toast({
-                title: 'Error',
-                description: 'An error occurred while saving the itinerary.',
-                status: 'error',
-                duration: 5000,
-                isClosable: true
+              .then((response) => {
+                // Handle success
+                toast({
+                  title: 'Success',
+                  description: 'Itinerary saved successfully.',
+                  status: 'success',
+                  duration: 5000,
+                  isClosable: true
+                });
+      
+                navigate('/my-plans');
+              })
+              .catch((error) => {
+                // Handle errors from the server
+                console.error('Error saving itinerary:', error);
+      
+                // Show an error toast
+                toast({
+                  title: 'Error',
+                  description: 'An error occurred while saving the itinerary.',
+                  status: 'error',
+                  duration: 5000,
+                  isClosable: true
+                });
               });
-            });
-        })
-        .catch((error) => {
-          // Handle errors from the image request
-          console.error('Error fetching image:', error);
+          })
+          .catch((error) => {
+            // Handle errors from the image request
+            console.error('Error fetching image:', error);
+      
+            // Set a default image_url in case of an error
+            const image_url = 'image_not_found.png';
+      
+            // Continue with the rest of the code
+            console.log(image_url);
+          });
+      } catch (error) {
+        // Handle errors from the server
+        console.error('Error saving itinerary:', error);
     
-          // Set a default image_url in case of an error
-          const image_url = 'image_not_found.png';
-    
-          // Continue with the rest of the code
-          console.log(image_url);
+        // Show an error toast
+        toast({
+          title: 'Error',
+          description: 'An error occurred while saving the itinerary.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true
         });
-    } catch (error) {
-      // Handle errors from the server
-      console.error('Error saving itinerary:', error);
-  
-      // Show an error toast
-      toast({
-        title: 'Error',
-        description: 'An error occurred while saving the itinerary.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true
-      });
+      }
+    } else {
+      try {
+        // Make the POST request without including the image_url
+        const response = await axios.post('http://localhost:3003/create-itinerary', {
+          token: storedToken,
+          date_modified: new Date(),
+          itinerary_name: itinerary_name,
+          plan: JSON.stringify(itinerary),
+          image_url: location.state?.image_url,
+          locationsMapping: JSON.stringify(locationsMapping),
+          id: id
+        });
+
+        // Handle success
+        toast({
+          title: 'Success',
+          description: 'Itinerary saved successfully.',
+          status: 'success',
+          duration: 5000,
+          isClosable: true
+        });
+
+        navigate('/my-plans');
+      } catch (error) {
+        // Handle errors from the server
+        console.error('Error saving itinerary:', error);
+
+        // Show an error toastEditingEvent
+        toast({
+          title: 'Error',
+          description: 'An error occurred while saving the itinerary.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true
+        });
+      }
     }
-  };  
+  }
+
+  const addDisplay = () => {
+    if (editingEvent) {
+      return (
+        <Box>
+          <Input type="time" />
+          <Input placeholder="Event" />
+          <LocationInput />
+          <Button
+            mb={6}
+            bg="#209fb5"
+          >
+            Add event
+          </Button>
+        </Box>
+      );
+    } else {
+      return <></>;
+    }
+  }
+
+  const editDisplay = (date, time) => {
+    if (editingEvent && editingBox && editingBox.date === date && editingBox.time === time) {
+      return (
+        <Box>
+          <Input type="time" />
+          <Input placeholder="Event" />
+          <LocationInput />
+          <Button
+            mb={6}
+            bg="#209fb5"
+          >
+            Finish edit
+          </Button>
+        </Box>
+      );
+    } else {
+      return <></>;
+    }
+  }
+
+  useEffect(() => {
+    setItineraryDisplay(() => (
+      <Box>
+        {Object.keys(itinerary).map((date) => (
+          <div key={date}>
+            <Text marginTop="8px" marginBottom="8px">{date}</Text>
+            {Object.keys(itinerary[date]).map((time) => (
+              <Box
+                key={time}
+                borderWidth="1px"
+                borderRadius="12px"
+                position="relative"
+                _hover={{ bgColor: 'gray.100' }}
+                height="auto"
+              >
+                <h3>{time}</h3>
+                <p>
+                  <strong>Event:</strong> {itinerary[date][time].event}
+                </p>
+                <p onClick={() => handleLocationNameClick(itinerary[date][time].location)} style={{ cursor: "pointer" }}>
+                  <strong>Location:</strong> {itinerary[date][time].location}
+                </p>
+                <Box display="flex" flexDir="column" height="100%" justifyContent="space-between" position="absolute" top="0" right="0" p="2">
+                  <EditIcon
+                    color="orange"
+                    onClick={() => handleEditClick(date, time)}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <DeleteIcon
+                    color="red"
+                    onClick={() => handleDeleteClick(date, time)}
+                    style={{ cursor: "pointer" }}
+                  />
+                </Box>
+                {editDisplay(date, time)}
+              </Box>
+            ))}
+          </div>
+        ))}
+      </Box>
+    ));
+  }, [itinerary, editingBox]);
 
   return (
     <div id="new-plan">
@@ -294,24 +449,15 @@ function Plan() {
             Save Itinerary
           </Button>
         </Box>
-        <Box>
-          {Object.keys(itinerary).map((date) => (
-            <div key={date}>
-              <h2>{date}</h2>
-              {Object.keys(itinerary[date]).map((time) => (
-                <div key={time}>
-                  <h3>{time}</h3>
-                  <p>
-                    <strong>Event:</strong> {itinerary[date][time].event}
-                  </p>
-                  <p onClick={() => handleLocationNameClick(itinerary[date][time].location)} style={{ cursor: "pointer" }}>
-                    <strong>Location:</strong> {itinerary[date][time].location}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ))}
-        </Box>
+        <Button
+          mb={6}
+          bg="green"
+          onClick={handleAddClick}
+        >
+          Add Event
+        </Button>
+        {addDisplay()}
+        {itineraryDisplay}
       </Box>
     </div>
   );

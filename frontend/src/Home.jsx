@@ -57,6 +57,7 @@ function Home() {
   const [lastDay, setLastDay] = useState();
   const [budget, setBudget] = useState();
   const [numPeople, setNumPeople] = useState();
+  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
   const updateDestinationName = (index, value) => {
@@ -127,8 +128,8 @@ function Home() {
     }
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
+    setIsLoading(true);
     try {
       setIsLoading(true);
       const dataForGPT = `
@@ -191,14 +192,16 @@ function Home() {
         console.log(assistantMessage); // Log the modified message
     
         // Update the state or perform any other actions with the modified message
+        setIsLoading(false);
         navigate('/plan', { state: { assistantMessage: useModified ? modifiedAssistantMessage : assistantMessage } });
       })
       .catch((error) => {
         console.log(error);
+
+        setIsLoading(false);
       });
     } catch (error) {
       console.error('Error in handleSubmit:', error);
-    } finally{
       setIsLoading(false);
     }
   };

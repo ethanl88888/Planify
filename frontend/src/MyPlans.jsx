@@ -44,9 +44,11 @@ const MyPlans = () => {
 
       const plan = selectedItinerary.plan;
       const locationsMapping = selectedItinerary.locationsMapping;
+      const id = selectedItinerary.id;
+      const image_url = selectedItinerary.image_url;
 
       if (plan) {
-        navigate('/plan', { state: { assistantMessage: plan, mapping: locationsMapping } });
+        navigate('/plan', { state: { assistantMessage: plan, mapping: locationsMapping, id: id, image_url: image_url } });
 
         // Now you can use the selectedPlan as needed
       } else {
