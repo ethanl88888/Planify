@@ -39,7 +39,6 @@ function Plan() {
   const [editingEvent, setEditingEvent] = useState(null);
   const [editingBox, setEditingBox] = useState(null);
   const [addingEvent, setAddingEvent] = useState(null);
-  const [addingBox, setAddingBox] = useState(null);
   const [finishEditingClicked, setFinishEditingClicked] = useState(false);
   const [addEventClicked, setAddEventClicked] = useState(false);
   const [dateInput, setDateInput] = useState(null);
@@ -191,8 +190,57 @@ function Plan() {
   const handleAddClick = () => {
     setAddingEvent(!addingEvent);
     setEditingEvent(false);
-    setAddingBox();
   }
+
+  useEffect(() => {
+    if (addEventClicked) {
+      if (changedTime == null || changedEvent == null || changedLocation == null) {
+        setAddEventClicked(false);
+        toast({
+          title: 'Error: Please fill in all fields before adding event',
+          status: 'error',
+          duration: 3000,
+          isClosable: true
+        });
+      } else {
+        setItinerary(() => {
+          let updatedItinerary = { ...itinerary };
+          console.log(changedTime)
+
+          const [dateSplit, timeSplit] = changedTime.split('T');
+          console.log(dateSplit)
+
+          const [hours, minutes] = timeSplit.split(':');
+          const time12 = new Date(0, 0, 0, hours, minutes);
+          const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+          const newTime = time12.toLocaleTimeString('en-US', options);
+
+          if (!updatedItinerary[dateSplit]) {
+            updatedItinerary[dateSplit] = {};
+          }
+
+          updatedItinerary[dateSplit][newTime] = {
+            event: changedEvent,
+            location: changedLocation,
+          };
+          return updatedItinerary;
+        });
+        
+        // Reset the editing state
+        setAddingEvent(null);
+        setChangedTime(null);
+        setChangedEvent(null);
+        setChangedLocation(null);
+        setAddEventClicked(false);
+        toast({
+          title: 'Event sucessfully added.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true
+        });
+      }
+    }
+  }, [addEventClicked, changedTime, changedEvent, changedLocation]);
 
   const handleEditClick = (date, time) => {
     setEditingEvent(!editingEvent)
@@ -247,6 +295,12 @@ function Plan() {
       setChangedEvent(null);
       setChangedLocation(null);
       setFinishEditingClicked(false);
+      toast({
+        title: 'Event sucessfully edited.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true
+      });
     }
   }, [finishEditingClicked, changedTime, changedEvent, changedLocation, dateInput, timeInput]);
 
@@ -274,7 +328,7 @@ function Plan() {
       toast({
         title: 'Error: You must be logged in to save a plan',
         status: 'error',
-        duration: 5000,
+        duration: 3000,
         isClosable: true
       });
       return;
@@ -283,7 +337,7 @@ function Plan() {
       toast({
         title: 'Error: Plan must have a name before saving',
         status: 'error',
-        duration: 5000,
+        duration: 3000,
         isClosable: true
       });
       return;
@@ -324,7 +378,7 @@ function Plan() {
                   title: 'Success',
                   description: 'Itinerary saved successfully.',
                   status: 'success',
-                  duration: 5000,
+                  duration: 3000,
                   isClosable: true
                 });
       
@@ -339,7 +393,7 @@ function Plan() {
                   title: 'Error',
                   description: 'An error occurred while saving the itinerary.',
                   status: 'error',
-                  duration: 5000,
+                  duration: 3000,
                   isClosable: true
                 });
               });
@@ -363,7 +417,7 @@ function Plan() {
           title: 'Error',
           description: 'An error occurred while saving the itinerary.',
           status: 'error',
-          duration: 5000,
+          duration: 3000,
           isClosable: true
         });
       }
@@ -385,7 +439,7 @@ function Plan() {
           title: 'Success',
           description: 'Itinerary saved successfully.',
           status: 'success',
-          duration: 5000,
+          duration: 3000,
           isClosable: true
         });
 
@@ -399,7 +453,7 @@ function Plan() {
           title: 'Error',
           description: 'An error occurred while saving the itinerary.',
           status: 'error',
-          duration: 5000,
+          duration: 3000,
           isClosable: true
         });
       }
@@ -410,12 +464,16 @@ function Plan() {
     if (addingEvent) {
       return (
         <Box>
-          <Input type="time" />
-          <Input placeholder="Event" />
-          <LocationInput />
+          <Input type="datetime-local" value={changedTime} onChange={(e) => setChangedTime(e.target.value)} />
+          <Input placeholder="Event" value={changedEvent} onChange={(e) => setChangedEvent(e.target.value)} />
+          <LocationInput value={changedLocation} onChange={(e) => setChangedLocation(e)} />
           <Button
             mb={6}
             bg="#209fb5"
+            onClick={() => {
+              setAddEventClicked(true)
+            }
+            }
           >
             Add event
           </Button>
