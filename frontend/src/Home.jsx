@@ -101,18 +101,19 @@ function Home() {
     const newLastDay = e.target.value;
 
     // Perform the validation check
-    if (!firstDay || new Date(newLastDay) >= new Date(firstDay)) {
+    if (!firstDay || new Date(newLastDay) > new Date(firstDay)) {
       setLastDay(newLastDay);
     } else {
-      // You can display an error message or handle the invalid input in some way
-      toast.error("Last day cannot be before first day.", {
-        position: "top-center",
-        autoClose: 3000, // milliseconds
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      setLastDay('');
+      if (!toast.isActive('error-last-day')) {
+        toast({
+          id: 'error-last-day',
+          title: "Error: Please set your Last Day later than your First Day.",
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -136,7 +137,30 @@ function Home() {
         duration: 3000,
         isClosable: true
       });
+    } else if (firstDay > lastDay) {
+      toast({
+        title: "Error: Your Last Day's date must be later than your First Day's.",
+        status: 'error',
+        duration: 3000,
+        isClosable: true
+      });
     } else {
+      const isDateVisitingValid = destinations.every(
+        (destination) =>
+          destination.dateVisiting === '' ||
+          (destination.dateVisiting >= firstDay && destination.dateVisiting <= lastDay)
+      );
+
+      if (!isDateVisitingValid) {
+        toast({
+          title: 'Error: Make sure each date visiting is within your First Day and Last Day.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return; // Stop further processing if dateVisiting is not valid
+      }
+
       setIsLoading(true);
       try {
         const loadingMessages = [
@@ -145,6 +169,11 @@ function Home() {
           'Optimizing the route...',
           'Considering budget constraints...',
           'Making your trip more fun...',
+          'Exploring hidden gems...',
+          'Selecting top-notch accommodations...',
+          'Creating photo-worthy moments...',
+          'Assembling a diverse itinerary...',
+          'Navigating logistical challenges...',
           'More loading text because I got no more ideas'
         ];
 
@@ -251,121 +280,103 @@ function Home() {
 
   return (
     <div id="home">
-      <Flex direction="column" align="center">
-        <Box position="relative" zIndex="1" width="100%">
-          <Bar />
-        </Box>
-        <Heading textAlign="center" color="#209fb5" fontSize="55px" mt={79}>
-          Let's Plan Your Next Trip!
-        </Heading>
-      </Flex>
-      <Box id="home-container" position="absolute" top="40%" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
-        <Flex id="home-main" flexDirection="row" maxHeight="80%" margin="30px">
-          <Flex
-            id="home-main-left"
-            position="relative"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            margin-top="-50px"
-            flex="1"
-            marginLeft="50px"
-          >
-            <Image
-              src={home_cover2}
-              alt="Home Image"
-              boxSize="100%"
-              objectFit="cover"
-              height="auto"  
-              objectPosition="30 90%"
-              zIndex="-1"
-            />
+      <Bar />
+      <Heading textAlign="center" color="#209fb5" fontSize="55px" position="absolute" top="90px" width="100%">
+        Let's Plan Your Next Trip.
+      </Heading>
+      <Box id="home-container" position="absolute" top="180px" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
+        <Image
+          src={home_cover2}
+          alt="Home Image"
+          position="absolute"
+          left="5%"
+          width="800px"
+          zIndex="-1"
+        />
+        <Flex id="home-main-right" position="absolute" top="" right="5%" flex="1" width="800px" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
+          <Flex flexDirection="row" id="dates-input">
+            <Flex flexDirection="column" flex="1" p={5}>
+              <Text>First Day</Text>
+              <Input placeholder="First Day" type="date" value={firstDay} onChange={(e) => setFirstDay(e.target.value)} />
+            </Flex>
+            <Flex flexDirection="column" flex="1" p={5}>
+              <Text>Last Day</Text>
+              <Input placeholder="Last Day" type="date" value={lastDay} onChange={handleLastDayChange} disabled={!firstDay}/>
+            </Flex>
           </Flex>
-          <Flex id="home-main-right" flex="1" margin="8%" marginRight="20px" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
-            {destinations.map((destination, index) => (
-              <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row" p={7}>
-                <LocationInput onChange={(value) => updateDestinationName(index, value)} />
-                <Flex flexDirection="column" ml={20} mt={-5}>
-                  <Text>Date visiting (optional)</Text>
-                  <Input type="date" onChange={(value) => updateDestinationDate(index, value.target.value)} />
-                </Flex>
-                {destinations.length > 1 && (
-                  <Button
-                    mb={6}
-                    bg="red.400"
-                    margin="4px"
-                    onClick={() => handleRemoveDestination(index)}
-                  >
-                    Remove
-                  </Button>
-                )}
+          {destinations.map((destination, index) => (
+            <Flex key={destination.id} id={`destination-input-${destination.id}`} flexDirection="row" p={7} justifyContent="center">
+              <LocationInput onChange={(value) => updateDestinationName(index, value)} />
+              <Flex flexDirection="column" ml={20} mt={-5}>
+                <Text>Date visiting (optional)</Text>
+                <Input type="date" onChange={(value) => updateDestinationDate(index, value.target.value)} />
               </Flex>
-            ))}
-            <Box align="center" justifyContent="center" >
-              <Button
-                mb={6}
-                bg="#209fb5"
-                onClick={handleAddDestination}
-              >
-                Add Destination
-              </Button>
-            </Box>
-            <Flex flexDirection="row" id="dates-input">
-              <Flex flexDirection="column" flex ="1" p={5}>
-                <Text>First Day</Text>
-                <Input placeholder="First Day" type="date" value={firstDay} onChange={(e) => setFirstDay(e.target.value)} />
-              </Flex>
-              <Flex flexDirection="column" flex="1" p={5}>
-                <Text>Last Day</Text>
-                <Input placeholder="Last Day" type="date" value={lastDay} onChange={handleLastDayChange} disabled={!firstDay}/>
-              </Flex>
+              {destinations.length > 1 && (
+                <Button
+                  mb={6}
+                  bg="red.400"
+                  margin="4px"
+                  onClick={() => handleRemoveDestination(index)}
+                >
+                  Remove
+                </Button>
+              )}
             </Flex>
-            <Flex id="budget-input" flexDirection="column" mt={-5} p={5}>
-              <Text>Budget</Text>
-              <NumberInput min={0} value={budget} onChange={(e) => setBudget(parseFloat(e))}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-            </Flex>
-            <Flex id="num-people-input" flexDirection="column" mt={-5} p={5}>
-              <Text>Number of People</Text>
-              <NumberInput min={0} value={numPeople} onChange={(e) => setNumPeople(parseInt(e))}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-            </Flex>
-            <Flex flexDirection="column" id="activities-dropdown" mt={-5} p={5}>
-              <Text>Select Activities</Text>
-              <Select
-                placeholder={selectedActivities.length > 0 ? selectedActivities.join(', ') : 'Select activities'}
-                value={selectedActivities.join(', ')}
-                onChange={(e) => handleActivityChange(e.target.value)}
-                onClick={toggleDropdown}
-                isOpen={isDropdownOpen}
-              >
-                {activitiesOptions.map((activity) => (
-                  <option key={activity} value={activity}>
-                    {activity}
-                  </option>
-                ))}
-              </Select>
-            </Flex>
-            <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5} style={{ backdropFilter: isLoading ? 'blur(5px)' : 'none' }}>
-              <Button
-                mb={6}
-                bg="green.400"
-                onClick={handleSubmit}
-                isLoading={isLoading}
-              >
-                {isLoading ? 'Loading' : 'Submit Itinerary'}
-              </Button>
-            </Flex>
+          ))}
+          <Box align="center" justifyContent="center" >
+            <Button
+              mb={6}
+              bg="#209fb5"
+              onClick={handleAddDestination}
+            >
+              Add Destination
+            </Button>
+          </Box>
+          <Flex id="budget-input" flexDirection="column" mt={-5} p={5}>
+            <Text>Budget</Text>
+            <NumberInput min={0} value={budget} onChange={(e) => setBudget(parseFloat(e))}>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </Flex>
+          <Flex id="num-people-input" flexDirection="column" mt={-5} p={5}>
+            <Text>Number of People</Text>
+            <NumberInput min={0} value={numPeople} onChange={(e) => setNumPeople(parseInt(e))}>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </Flex>
+          <Flex flexDirection="column" id="activities-dropdown" mt={-5} p={5}>
+            <Text>Select Activities</Text>
+            <Select
+              placeholder={selectedActivities.length > 0 ? selectedActivities.join(', ') : 'Select activities'}
+              value={selectedActivities.join(', ')}
+              onChange={(e) => handleActivityChange(e.target.value)}
+              onClick={toggleDropdown}
+              isOpen={isDropdownOpen}
+            >
+              {activitiesOptions.map((activity) => (
+                <option key={activity} value={activity}>
+                  {activity}
+                </option>
+              ))}
+            </Select>
+          </Flex>
+          <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5} style={{ backdropFilter: isLoading ? 'blur(5px)' : 'none' }}>
+            <Button
+              mb={6}
+              bg="green.400"
+              onClick={handleSubmit}
+              isLoading={isLoading}
+            >
+              {isLoading ? 'Loading' : 'Submit Itinerary'}
+            </Button>
           </Flex>
         </Flex>
       </Box>
