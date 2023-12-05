@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MapWithMarkers from './components/EmbededMap';
 import Bar from './components/Bar';
@@ -7,7 +7,6 @@ import { AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import Fuse from 'fuse.js';
 import axios from 'axios';
 import LocationInput from './components/LocationInput';
-import $ from "jquery";
 
 const geoapifyKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
 const pexelsKey = import.meta.env.VITE_PEXELS_API_KEY;
@@ -32,7 +31,6 @@ function Plan() {
       )
     )
   );
-
   const [locationData, setLocationData] = useState([]);
   const [activeLocation, setActiveLocation] = useState(null);
   const [locationsMapping, setLocationsMapping] = useState({});
@@ -42,6 +40,12 @@ function Plan() {
   const [editingBox, setEditingBox] = useState(null);
   const [addingEvent, setAddingEvent] = useState(null);
   const [addingBox, setAddingBox] = useState(null);
+  const [finishEditingClicked, setFinishEditingClicked] = useState(false);
+  const [dateInput, setDateInput] = useState(null);
+  const [timeInput, setTimeInput] = useState(null);
+  const [changedTime, setChangedTime] = useState(null);
+  const [changedEvent, setChangedEvent] = useState(null);
+  const [changedLocation, setChangedLocation] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -184,16 +188,51 @@ function Plan() {
   }
 
   const handleAddClick = () => {
-    setAddingEvent(addingEvent ? false : true)
+    setAddingEvent(!addingEvent);
+    setEditingEvent(false);
     setAddingBox();
   }
 
   const handleEditClick = (date, time) => {
-    // let updatedItinerary = { ...itinerary };
-    setEditingEvent(editingEvent ? false : true)
+    setEditingEvent(!editingEvent)
+    setAddingEvent(false);
     setEditingBox({ date, time });
-    // setItinerary(updateItinerary);
   }
+
+  useEffect(() => {
+    if (finishEditingClicked) {
+      setItinerary(() => {
+        let updatedItinerary = { ...itinerary };
+        const editedEvent = updatedItinerary[dateInput][timeInput];
+
+        if (changedTime != null) {
+          const [hours, minutes] = changedTime.split(':');
+          const time12 = new Date(0, 0, 0, hours, minutes);
+          const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+          const newTime = time12.toLocaleTimeString('en-US', options);
+
+          updatedItinerary[dateInput] = { ...itinerary[dateInput], [newTime]: editedEvent };
+          delete updatedItinerary[dateInput][timeInput];
+        }
+        if (changedEvent != null) {
+          editedEvent.event = changedEvent;
+        }
+        if (changedLocation != null) {
+          editedEvent.location = changedLocation;
+        }
+
+        return updatedItinerary;
+      });
+
+      // Reset the editing state
+      setEditingEvent(null);
+      setEditingBox(null);
+      setChangedTime(null);
+      setChangedEvent(null);
+      setChangedLocation(null);
+      setFinishEditingClicked(false);
+    }
+  }, [finishEditingClicked, changedTime, changedEvent, changedLocation, dateInput, timeInput]);
 
   const handleDeleteClick = (date, time) => {
     // Create a copy of the itinerary
@@ -375,12 +414,18 @@ function Plan() {
     if (editingEvent && editingBox && editingBox.date === date && editingBox.time === time) {
       return (
         <Box>
-          <Input type="time" />
-          <Input placeholder="Event" />
-          <LocationInput />
+          <Input type="time" value={changedTime} onChange={(e) => setChangedTime(e.target.value)} />
+          <Input placeholder="Event" value={changedEvent} onChange={(e) => setChangedEvent(e.target.value)} />
+          <LocationInput value={changedLocation} onChange={(e) => setChangedLocation(e)} />
           <Button
             mb={6}
             bg="#209fb5"
+            onClick={() => {
+              setDateInput(date)
+              setTimeInput(time)
+              setFinishEditingClicked(true)
+            }
+            }
           >
             Finish edit
           </Button>
@@ -390,6 +435,10 @@ function Plan() {
       return <></>;
     }
   }
+
+  useEffect(() => {
+    console.log('test')
+  }, [itineraryDisplay])
 
   useEffect(() => {
     setItineraryDisplay(() => (
@@ -432,7 +481,7 @@ function Plan() {
         ))}
       </Box>
     ));
-  }, [itinerary, editingBox, fuse]);
+  }, [itinerary, editingBox, fuse, editingEvent, addingEvent]);
 
   return (
     <div id="new-plan">
