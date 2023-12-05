@@ -212,6 +212,7 @@ function Home() {
 
         let inputForGPT = JSON.stringify({
           "model": "gpt-4-1106-preview",
+          "response_format": { "type": "json_object" },
           "messages": [
             {
               "role": "system",
