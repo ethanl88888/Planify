@@ -224,11 +224,19 @@ function Home() {
             flexDirection="column"
             alignItems="center"
             justifyContent="center"
-            margin-top = "-50px"
+            margin-top="-50px"
             flex="1"
             marginLeft="50px"
           >
-            <Image src={home_cover2} alt="Home Image" boxSize="100%" objectFit="cover" height="550px" objectPosition="30 90%" zIndex="-1" />
+            <Image
+              src={home_cover2}
+              alt="Home Image"
+              boxSize="100%"
+              objectFit="cover"
+              height="auto"  
+              objectPosition="30 90%"
+              zIndex="-1"
+            />
           </Flex>
           <Flex id="home-main-right" flex="1" margin="8%" marginRight="20px" height = "100%" width="65%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
             {destinations.map((destination, index) => (
