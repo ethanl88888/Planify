@@ -41,6 +41,7 @@ function Plan() {
   const [addingEvent, setAddingEvent] = useState(null);
   const [addingBox, setAddingBox] = useState(null);
   const [finishEditingClicked, setFinishEditingClicked] = useState(false);
+  const [addEventClicked, setAddEventClicked] = useState(false);
   const [dateInput, setDateInput] = useState(null);
   const [timeInput, setTimeInput] = useState(null);
   const [changedTime, setChangedTime] = useState(null);
@@ -203,16 +204,31 @@ function Plan() {
     if (finishEditingClicked) {
       setItinerary(() => {
         let updatedItinerary = { ...itinerary };
-        const editedEvent = updatedItinerary[dateInput][timeInput];
+        let editedEvent = updatedItinerary[dateInput][timeInput];
 
         if (changedTime != null) {
-          const [hours, minutes] = changedTime.split(':');
+          const [dateSplit, timeSplit] = changedTime.split('T');
+
+          const [hours, minutes] = timeSplit.split(':');
           const time12 = new Date(0, 0, 0, hours, minutes);
           const options = { hour: 'numeric', minute: 'numeric', hour12: true };
           const newTime = time12.toLocaleTimeString('en-US', options);
 
-          updatedItinerary[dateInput] = { ...itinerary[dateInput], [newTime]: editedEvent };
-          delete updatedItinerary[dateInput][timeInput];
+          updatedItinerary[dateSplit] = { ...itinerary[dateSplit], [newTime]: editedEvent };
+          
+          const updatedDate = Object.keys(updatedItinerary[dateInput]).reduce((object, key) => {
+            if (key !== timeInput) {
+              object[key] = updatedItinerary[dateInput][key];
+            }
+            return object;
+          }, {})
+
+          updatedItinerary[dateInput] = updatedDate;
+
+          if (Object.keys(updatedItinerary[dateInput]).length == 0) {
+            delete updatedItinerary[dateInput]
+          }
+          editedEvent = updatedItinerary[dateSplit][newTime];
         }
         if (changedEvent != null) {
           editedEvent.event = changedEvent;
@@ -223,7 +239,7 @@ function Plan() {
 
         return updatedItinerary;
       });
-
+      
       // Reset the editing state
       setEditingEvent(null);
       setEditingBox(null);
@@ -414,7 +430,7 @@ function Plan() {
     if (editingEvent && editingBox && editingBox.date === date && editingBox.time === time) {
       return (
         <Box>
-          <Input type="time" value={changedTime} onChange={(e) => setChangedTime(e.target.value)} />
+          <Input type="datetime-local" value={changedTime} onChange={(e) => setChangedTime(e.target.value)} />
           <Input placeholder="Event" value={changedEvent} onChange={(e) => setChangedEvent(e.target.value)} />
           <LocationInput value={changedLocation} onChange={(e) => setChangedLocation(e)} />
           <Button
@@ -437,8 +453,8 @@ function Plan() {
   }
 
   useEffect(() => {
-    console.log('test')
-  }, [itineraryDisplay])
+    console.log(itinerary);
+  }, [itinerary])
 
   useEffect(() => {
     setItineraryDisplay(() => (
