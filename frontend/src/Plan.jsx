@@ -515,48 +515,71 @@ function Plan() {
   }, [itinerary])
 
   useEffect(() => {
-    setItineraryDisplay(() => (
-      <Box>
-        {Object.keys(itinerary).map((date) => (
-          <div key={date}>
-            <Text marginTop="8px" marginBottom="8px">{date}</Text>
-            {Object.keys(itinerary[date]).map((time) => (
-              <Box
-                key={time}
-                borderWidth="1px"
-                borderRadius="12px"
-                position="relative"
-                _hover={{ bgColor: 'gray.100' }}
-                height="auto"
-              >
-                <h3>{time}</h3>
-                <p>
-                  <strong>Event:</strong> {itinerary[date][time].event}
-                </p>
-                <p onClick={() => handleLocationNameClick(itinerary[date][time].location)} style={{ cursor: "pointer" }}>
-                  <strong>Location:</strong> {itinerary[date][time].location}
-                </p>
-                <Box display="flex" flexDir="column" height="100%" justifyContent="space-between" position="absolute" top="0" right="0" p="2">
-                  <EditIcon
-                    color="orange"
-                    onClick={() => handleEditClick(date, time)}
-                    style={{ cursor: "pointer" }}
-                  />
-                  <DeleteIcon
-                    color="red"
-                    onClick={() => handleDeleteClick(date, time)}
-                    style={{ cursor: "pointer" }}
-                  />
+    setItineraryDisplay(() => {
+      const sortedDates = Object.keys(itinerary).sort((a, b) => new Date(a) - new Date(b));
+      const sortedItinerary = {};
+  
+      sortedDates.forEach((date) => {
+        // Sort times for each date
+        const sortedTimes = Object.keys(itinerary[date]).sort((a, b) => {
+          // Custom sorting function to handle AM/PM correctly
+          const timeA = new Date(`${date} ${a}`);
+          const timeB = new Date(`${date} ${b}`);
+          return timeA - timeB;
+        });
+  
+        sortedItinerary[date] = {};
+        sortedTimes.forEach((time) => {
+          sortedItinerary[date][time] = itinerary[date][time];
+        });
+      });
+  
+      return (
+        <Box>
+          {sortedDates.map((date) => (
+            <div key={date}>
+              <Text marginTop="8px" marginBottom="8px">{date}</Text>
+              {Object.keys(sortedItinerary[date]).map((time) => (
+                <Box
+                  key={time}
+                  borderWidth="1px"
+                  borderRadius="12px"
+                  position="relative"
+                  _hover={{ bgColor: 'gray.100' }}
+                  height="auto"
+                >
+                  <h3>{time}</h3>
+                  <p>
+                    <strong>Event:</strong> {sortedItinerary[date][time].event}
+                  </p>
+                  <p onClick={() => handleLocationNameClick(sortedItinerary[date][time].location)} style={{ cursor: "pointer" }}>
+                    <strong>Location:</strong> {sortedItinerary[date][time].location}
+                  </p>
+                  <Box display="flex" flexDir="column" height="100%" justifyContent="space-between" position="absolute" top="0" right="0" p="2">
+                    <EditIcon
+                      color="orange"
+                      onClick={() => handleEditClick(date, time)}
+                      style={{ cursor: "pointer" }}
+                    />
+                    <DeleteIcon
+                      color="red"
+                      onClick={() => handleDeleteClick(date, time)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </Box>
+                  {editDisplay(date, time)}
                 </Box>
-                {editDisplay(date, time)}
-              </Box>
-            ))}
-          </div>
-        ))}
-      </Box>
-    ));
+              ))}
+            </div>
+          ))}
+        </Box>
+      );
+    });
   }, [itinerary, editingBox, fuse, editingEvent, addingEvent]);
-
+  
+  
+  
+  
   return (
     <div id="new-plan">
       <Bar />
