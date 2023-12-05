@@ -18,6 +18,7 @@ function Plan() {
 
   const assistantMessage = location.state?.assistantMessage;
   const id = location.state?.id;
+  const itineraryName = location.state?.name;
 
   if (assistantMessage == null) {
     return <p>Error: Itinerary not generated</p>
@@ -71,6 +72,16 @@ function Plan() {
           });
           setFuse(fuseInstance)
         } else {
+          if (!toast.isActive('map-loading')) {
+            toast({
+              id: 'map-loading',
+              title: 'Plan successfully generated. Loading map...',
+              status: 'loading',
+              duration: null,
+              isClosable: true,
+            });
+          }
+
           const url = `https://api.geoapify.com/v1/batch/geocode/search?apiKey=${geoapifyKey}`;
 
           function getBodyAndStatus(response) {
@@ -146,6 +157,7 @@ function Plan() {
           // Fetch data using the geocoding API
           const queryResult = await fetchData();
 
+          toast.closeAll();
           const locations = queryResult.map((location) => ({
             name: location.formatted,
             coordinates: [location.lon, location.lat],
@@ -318,10 +330,16 @@ function Plan() {
 
     // Update the state to trigger a re-render
     setItinerary(updatedItinerary);
+    toast({
+      title: 'Event sucessfully deleted.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true
+    });
   };
 
   const handleSubmit = async () => {
-    const itinerary_name = document.getElementById('planNameInput').value;
+    const itinerary_name = itineraryName == null ? document.getElementById('planNameInput').value : itineraryName;
     const storedToken = localStorage.getItem('token');
   
     if (!storedToken) {
@@ -348,14 +366,14 @@ function Plan() {
         let config = {
           method: 'get',
           maxBodyLength: Infinity,
-          url: `https://api.pexels.com/v1/search?query=${uniqueLocations[0]}&orientation=square&per_page=50`,
+          url: `https://api.pexels.com/v1/search?query=${uniqueLocations[0]}&orientation=square&per_page=20`,
           headers: {
             'Authorization': pexelsKey,
           }
         };
         axios.request(config)
           .then((response) => {
-            const randomIndex = Math.floor(Math.random() * Math.min(response.data.total_results, 50)) - 1;
+            const randomIndex = Math.floor(Math.random() * Math.min(response.data.total_results, 20)) - 1;
             // Get the original image URL from the randomly selected photo
             const image_url = response.data.photos[randomIndex].src.original;
       
@@ -475,7 +493,7 @@ function Plan() {
             }
             }
           >
-            Add event
+            Submit
           </Button>
         </Box>
       );
@@ -577,19 +595,25 @@ function Plan() {
     });
   }, [itinerary, editingBox, fuse, editingEvent, addingEvent]);
   
-  
-  
+  const heading = () => {
+    if (itineraryName == null) {
+      return <Input id="planNameInput" placeholder="Give your plan a name" />
+    } else {
+      return <Text fontWeight="bold" fontSize="35px">{itineraryName}</Text>
+    }
+  }
   
   return (
     <div id="new-plan">
       <Bar />
       <MapWithMarkers destinations={locationsMapping} activeLocation={activeLocation} />
       <Box display="flex" flexDir="column" padding="42px" position="fixed" top="12%" right="2%" width="42%" height="83%" borderWidth="3px" borderRadius="12px" overflow="scroll" bgColor="white">
-        <Box display="flex" flexDir="row">
-          <Input id="planNameInput" placeholder="Give your plan a name" />
+        <Box display="flex" flexDir="row" justifyContent="space-between">
+          {heading()}
           <Button
             mb={6}
             bg="#209fb5"
+            padding="20px"
             onClick={handleSubmit}
           >
             Save Itinerary
@@ -598,6 +622,10 @@ function Plan() {
         <Button
           mb={6}
           bg="green"
+          // width="100px"
+          alignSelf="center"
+          margin="0px"
+          padding="10px"
           onClick={handleAddClick}
         >
           Add Event

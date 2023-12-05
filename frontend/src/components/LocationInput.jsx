@@ -10,14 +10,19 @@ function getSuggestionValue(suggestion) {
   return suggestion.name;
 }
 
-function renderSuggestion(suggestion) {
-  // console.log(suggestion.name)
+function renderSuggestion(suggestion, { isHighlighted }) {
   return (
     <ListItem
-      boxShadow="0 1px 5px rgba(0, 0, 0, 0.65)"
+      // boxShadow="0 1px 5px rgba(0, 0, 0, 0.65)"
+      borderWidth="1px"
       borderRadius="4px"
       styleType="none"
-    >{suggestion.name}</ListItem>
+      padding="10px"
+      style={{ cursor: "pointer" }}
+      bgColor={isHighlighted ? 'gray.100' : 'white'} // Change background color on hover
+    >
+      {suggestion.name}
+    </ListItem>
   );
 }
 
@@ -28,24 +33,26 @@ class LocationInput extends React.Component {
     this.state = {
       value: '',
       suggestions: [],
-      isLoading: false
+      isLoading: false,
+      highlightedIndex: null, // Track the highlighted index
     };
 
-    this.debouncedLoadSuggestions = _.debounce(this.loadSuggestions, 1500);
+    this.debouncedLoadSuggestions = _.debounce(this.loadSuggestions, 1000);
   }
-  
+
   async loadSuggestions(value) {
     this.setState({
-      isLoading: true
+      isLoading: true,
     });
-    
-    // Fake an AJAX call
+
     try {
       // Make an API call to fetch suggestions based on the input value
-      const response = await fetch(`https://api.locationiq.com/v1/autocomplete?key=${locationiqKey}&q=${value}&limit=5`);
+      const response = await fetch(
+        `https://api.locationiq.com/v1/autocomplete?key=${locationiqKey}&q=${value}&limit=5`
+      );
       const data = await response.json();
 
-      const suggestions = data.map(item => ({
+      const suggestions = data.map((item) => ({
         name: item.display_name,
         // Add other properties as needed
       }));
@@ -67,66 +74,98 @@ class LocationInput extends React.Component {
       });
     }
   }
-  
+
   onChange = (event, { newValue }) => {
     this.setState({
-      value: newValue
+      value: newValue,
     });
 
     this.props.onChange(newValue);
   };
-  
+
   onSuggestionsFetchRequested = ({ value }) => {
     this.debouncedLoadSuggestions(value);
   };
 
   onSuggestionsClearRequested = () => {
     this.setState({
-      suggestions: []
+      suggestions: [],
+    });
+  };
+
+  onSuggestionMouseEnter = (event, { index }) => {
+    this.setState({
+      highlightedIndex: index,
+    });
+  };
+
+  onSuggestionMouseLeave = () => {
+    this.setState({
+      highlightedIndex: null,
     });
   };
 
   render() {
-    const { value, suggestions, isLoading } = this.state;
+    const { value, suggestions, isLoading, highlightedIndex } = this.state;
     const inputProps = {
-      placeholder: "Where would you like to go?",
+      placeholder: 'Where would you like to go?',
       value,
-      onChange: this.onChange
+      onChange: this.onChange,
     };
-    const status = (isLoading ? 'Loading...' : 'Type to load suggestions');
+    const status = isLoading ? 'Loading...' : 'Type to load suggestions';
 
     return (
       <div>
-        {/* <div className="status"> */}
-        {/*   <strong>Status (for debugging):</strong> {status} */}
-        {/* </div> */}
-      <Autosuggest
-        suggestions={suggestions}
-        onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-        onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-        getSuggestionValue={getSuggestionValue}
-        renderSuggestion={renderSuggestion}
-        inputProps={inputProps}
-        renderInputComponent={(inputProps) => 
+        <Autosuggest
+          suggestions={suggestions}
+          onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+          onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+          getSuggestionValue={getSuggestionValue}
+          renderSuggestion={(suggestion, { isHighlighted }) =>
+            renderSuggestion(suggestion, { isHighlighted })
+          }
+          inputProps={inputProps}
+          onSuggestionMouseEnter={this.onSuggestionMouseEnter}
+          onSuggestionMouseLeave={this.onSuggestionMouseLeave}
+          renderInputComponent={(inputProps) => (
             <InputGroup>
-              <InputLeftElement><SearchIcon /></InputLeftElement>
-              <Input {...inputProps}
-                boxShadow="0 1px 5px rgba(0, 0, 0, 0.65)"
-                borderRadius="4px"
+              <InputLeftElement>
+                <SearchIcon />
+              </InputLeftElement>
+              <Input
+                {...inputProps}
+                borderWidth="1px"
+                borderRadius="5px"
                 width="280px"
               />
             </InputGroup>
-          }
-        renderSuggestionsContainer={({ containerProps, children }) => (
-          <Box {...containerProps} position="absolute" zIndex="1">
-            <List styleType={"none"}>{children}</List>
-          </Box>
-        )}
-      />
+          )}
+          renderSuggestionsContainer={({ containerProps, children }) => (
+            <Box {...containerProps} position="absolute" zIndex="1">
+              <List bgColor="white" width="280px" styleType={'none'}>
+                {React.Children.map(children, (child, index) =>
+                  React.cloneElement(child, {
+                    onMouseEnter: (event) => {
+                      this.onSuggestionMouseEnter(event, { index });
+                      if (child.props.onMouseEnter) {
+                        child.props.onMouseEnter(event);
+                      }
+                    },
+                    onMouseLeave: (event) => {
+                      this.onSuggestionMouseLeave(event, { index });
+                      if (child.props.onMouseLeave) {
+                        child.props.onMouseLeave(event);
+                      }
+                    },
+                  })
+                )}
+              </List>
+            </Box>
+          )}
+        />
       </div>
     );
   }
 }
 
-export default LocationInput
-
+export default LocationInput;

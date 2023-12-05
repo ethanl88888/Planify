@@ -67,9 +67,10 @@ const MyPlans = () => {
       const locationsMapping = selectedItinerary.locationsMapping;
       const id = selectedItinerary.id;
       const image_url = selectedItinerary.image_url;
+      const name = selectedItinerary.itinerary_name;
 
       if (plan) {
-        navigate('/plan', { state: { assistantMessage: plan, mapping: locationsMapping, id: id, image_url: image_url } });
+        navigate('/plan', { state: { assistantMessage: plan, mapping: locationsMapping, id: id, image_url: image_url, name: name } });
 
         // Now you can use the selectedPlan as needed
       } else {
@@ -110,11 +111,11 @@ const MyPlans = () => {
                 display = "flex"
                 flexDirection = "column"
                 alignItems = "center"
-
+                padding="25px"
               >
-                <Text fontWeight="bold">{itinerary.itinerary_name}</Text>
-                <Image marginTop = "20px" src={itinerary.image_url} objectFit="scale-down" maxWidth="80%" maxHeight="80%" />
-                <Text marginTop = "15px">Last Modified: {formattedDate}</Text>
+                <Text fontWeight="bold" fontSize="30px">{itinerary.itinerary_name}</Text>
+                <Image borderRadius="10px" marginTop="10px" src={itinerary.image_url} objectFit="scale-down" maxWidth="80%" maxHeight="80%" />
+                <Text marginTop="15px">Last Modified: {formattedDate}</Text>
                 <Box display="flex" flexDirection="row" justifyContent="space-between" width="100%">
                   <Button flex="1" padding="20px" color = "#209fb5"onClick={() => handleSubmit(itinerary.itinerary_name)} marginTop="15px" marginRight = "20px">
                     Edit

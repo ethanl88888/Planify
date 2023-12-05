@@ -129,80 +129,123 @@ function Home() {
   };
 
   const handleSubmit = () => {
-    setIsLoading(true);
-    try {
+    if (firstDay == null || lastDay == null || budget == null || numPeople == null || selectedActivities == null || destinations == null) {
+      toast({
+        title: 'Error: Please fill in all fields before submitting.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true
+      });
+    } else {
       setIsLoading(true);
-      const dataForGPT = `
-        Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
-        First Day of Overall Trip: ${firstDay},
-        Last Day of Overall Trip: ${lastDay},
-        Overall Budget of Trip: ${budget},
-        Number of People in this Trip: ${numPeople},
-        General Activities Looking Forward to in this Trip: ${selectedActivities}
-      `
+      try {
+        const loadingMessages = [
+          'Generating plan...',
+          'Finding the best places...',
+          'Optimizing the route...',
+          'Considering budget constraints...',
+          'Making your trip more fun...',
+          'More loading text because I got no more ideas'
+        ];
 
-      let inputForGPT = JSON.stringify({
-        "model": "gpt-4-1106-preview",
-        "messages": [
-          {
-            "role": "system",
-            "content": `You are given the following user input: ${dataForGPT}.`
-          },
-          {
-            "role": "user",
-            "content": `Based on the data I gave you, generate an itinerary strictly in JSON format, without any additional text or markdown.
-                        If the dateVisiting field of a destination is empty, assume it is up to you to decide when to visit that corresponding destination and how long to stay there. 
-                        The initial groups should be dates represented in yyyy-mm-dd format.
-                        Each of these groups will contain multiple subgroups with each key being the time (represented with H:M PM/AM) and the content inside being the event and location of an activity. Be specific with locations.
-                        You are to go into detail for each activity's event field based on the general activities given to you in the user input.
-                        For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
-                        { "yyyy-mm-dd": { "hh:mm AM/PM": { "event": "Event description", "location": "street address, neighborhood, city, county, state, postcode, country" } }
-                        The event should be very descriptive, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
-                        If you are unable to give the full address of a location, you can choose to cut out as much of the left portion of the location format. However, you must provide city, county, state, postcode, country as a bare minimum.
-                      `
+        let responseReceived = false;
+        // Function to display loading toast with different messages
+        const displayLoadingToast = (index) => {
+          if (!responseReceived) {
+            toast.closeAll();
+            toast({
+              title: loadingMessages[index],
+              status: 'loading',
+              duration: 6000,
+              isClosable: true,
+            });
+
+            if (index === loadingMessages.length - 1) {
+              index = -1;
+            }
+
+            setTimeout(() => {
+              displayLoadingToast(index + 1);
+            }, 6000);
           }
-        ]
-      });
+        };
 
-      let config = {
-        method: 'post',
-        maxBodyLength: Infinity,
-        url: 'https://api.openai.com/v1/chat/completions',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${chatGPTKey}`,
-        },
-        data: inputForGPT
-      };
+        displayLoadingToast(0);
 
-      axios.request(config)
-      .then((response) => {
-        const assistantMessage = response.data.choices[0].message.content;
-        let modifiedAssistantMessage = '';
-        let useModified = false;
+        const dataForGPT = `
+          Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
+          First Day of Overall Trip: ${firstDay},
+          Last Day of Overall Trip: ${lastDay},
+          Overall Budget of Trip: ${budget},
+          Number of People in this Trip: ${numPeople},
+          General Activities Looking Forward to in this Trip: ${selectedActivities}
+        `
 
-        // Split the message into lines
-        const lines = assistantMessage.split('\n');
-        if (lines[0] == '```json') {
-          // Remove the first and last lines
-          modifiedAssistantMessage = lines.slice(1, -1).join('\n');
-          useModified = true;
-        }
-    
-        console.log(assistantMessage); // Log the modified message
-    
-        // Update the state or perform any other actions with the modified message
+        let inputForGPT = JSON.stringify({
+          "model": "gpt-4-1106-preview",
+          "messages": [
+            {
+              "role": "system",
+              "content": `You are given the following user input: ${dataForGPT}.`
+            },
+            {
+              "role": "user",
+              "content": `Based on the data I gave you, generate an itinerary strictly in JSON format, without any additional text or markdown.
+                          If the dateVisiting field of a destination is empty, assume it is up to you to decide when to visit that corresponding destination and how long to stay there. 
+                          The initial groups should be dates represented in yyyy-mm-dd format.
+                          Each of these groups will contain multiple subgroups with each key being the time (represented with H:M PM/AM) and the content inside being the event and location of an activity. Be specific with locations.
+                          You are to go into detail for each activity's event field based on the general activities given to you in the user input.
+                          For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
+                          { "yyyy-mm-dd": { "hh:mm AM/PM": { "event": "Event description", "location": "street address, neighborhood, city, county, state, postcode, country" } }
+                          The event should be very descriptive, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
+                          If you are unable to give the full address of a location, you can choose to cut out as much of the left portion of the location format. However, you must provide city, county, state, postcode, country as a bare minimum.
+                        `
+            }
+          ]
+        });
+
+        let config = {
+          method: 'post',
+          maxBodyLength: Infinity,
+          url: 'https://api.openai.com/v1/chat/completions',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${chatGPTKey}`,
+          },
+          data: inputForGPT
+        };
+
+        axios.request(config)
+        .then((response) => {
+          responseReceived = true;
+          toast.closeAll();
+          const assistantMessage = response.data.choices[0].message.content;
+          let modifiedAssistantMessage = '';
+          let useModified = false;
+
+          // Split the message into lines
+          const lines = assistantMessage.split('\n');
+          if (lines[0] == '```json') {
+            // Remove the first and last lines
+            modifiedAssistantMessage = lines.slice(1, -1).join('\n');
+            useModified = true;
+          }
+      
+          console.log(assistantMessage); // Log the modified message
+
+          // Update the state or perform any other actions with the modified message
+          setIsLoading(false);
+          navigate('/plan', { state: { assistantMessage: useModified ? modifiedAssistantMessage : assistantMessage } });
+        })
+        .catch((error) => {
+          console.log(error);
+
+          setIsLoading(false);
+        });
+      } catch (error) {
+        console.error('Error in handleSubmit:', error);
         setIsLoading(false);
-        navigate('/plan', { state: { assistantMessage: useModified ? modifiedAssistantMessage : assistantMessage } });
-      })
-      .catch((error) => {
-        console.log(error);
-
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.error('Error in handleSubmit:', error);
-      setIsLoading(false);
+      }
     }
   };
 
@@ -247,14 +290,25 @@ function Home() {
                   <Input type="date" onChange={(value) => updateDestinationDate(index, value.target.value)} />
                 </Flex>
                 {destinations.length > 1 && (
-                  <Box>
-                    <button onClick={() => handleRemoveDestination(index)}>Remove</button>
-                  </Box>
+                  <Button
+                    mb={6}
+                    bg="red.400"
+                    margin="4px"
+                    onClick={() => handleRemoveDestination(index)}
+                  >
+                    Remove
+                  </Button>
                 )}
               </Flex>
             ))}
             <Box align="center" justifyContent="center" >
-              <button onClick={handleAddDestination}>Add Destination</button>
+              <Button
+                mb={6}
+                bg="#209fb5"
+                onClick={handleAddDestination}
+              >
+                Add Destination
+              </Button>
             </Box>
             <Flex flexDirection="row" id="dates-input">
               <Flex flexDirection="column" flex ="1" p={5}>
@@ -305,7 +359,7 @@ function Home() {
             <Flex flexDirection="row" id="submit-button" justifyContent="center" p={5} style={{ backdropFilter: isLoading ? 'blur(5px)' : 'none' }}>
               <Button
                 mb={6}
-                bg="#209fb5"
+                bg="green.400"
                 onClick={handleSubmit}
                 isLoading={isLoading}
               >
