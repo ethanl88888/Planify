@@ -11,10 +11,9 @@ const MapWithMarkers = ({ destinations, activeLocation }) => {
   const [markers, setMarkers] = useState([]);
 
   const offsetCoordinate = (coordinates, zoom) => {
-    const offsetXPercent = 1 + (3 * (10 ** (-zoom / 3)));
+    const offsetX = 500 * (10 ** (-zoom / 3));
     const [x, y] = coordinates;
-    const offsetX = x * offsetXPercent;
-    return [offsetX, y];
+    return [x + offsetX, y];
   };
 
   useEffect(() => {

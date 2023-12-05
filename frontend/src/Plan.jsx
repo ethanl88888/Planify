@@ -189,12 +189,15 @@ function Plan() {
     return <p>Loading...</p>;
   }
 
-  const handleLocationNameClick = (locationName) => {
+  const handleLocationNameClick = (locationName, event) => {
     if (fuse) {
-      const searchResults = fuse.search(locationName);
-      if (searchResults.length > 0) {
-        const coordinates = searchResults[0].item.coordinates;
-        setActiveLocation(coordinates);
+      const boxRect = event.currentTarget.getBoundingClientRect();
+      if (event.clientX < boxRect.right - 30) {
+        const searchResults = fuse.search(locationName);
+        if (searchResults.length > 0) {
+          const coordinates = searchResults[0].item.coordinates;
+          setActiveLocation(coordinates);
+        }
       }
     }
   }
@@ -564,13 +567,15 @@ function Plan() {
                   borderRadius="12px"
                   position="relative"
                   _hover={{ bgColor: 'gray.100' }}
+                  style={{ cursor: "pointer" }}
                   height="auto"
+                  onClick={(event) => handleLocationNameClick(sortedItinerary[date][time].location, event)}
                 >
                   <h3>{time}</h3>
                   <p>
                     <strong>Event:</strong> {sortedItinerary[date][time].event}
                   </p>
-                  <p onClick={() => handleLocationNameClick(sortedItinerary[date][time].location)} style={{ cursor: "pointer" }}>
+                  <p>
                     <strong>Location:</strong> {sortedItinerary[date][time].location}
                   </p>
                   <Box display="flex" flexDir="column" height="100%" justifyContent="space-between" position="absolute" top="0" right="0" p="2">
