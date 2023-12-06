@@ -2,8 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MapWithMarkers from './components/EmbededMap';
 import Bar from './components/Bar';
-import { Box, Button, Input, useToast, IconButton, Text } from '@chakra-ui/react';
-import { AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
+import { Box, Button, Input, useToast, IconButton, Text, Editable, EditablePreview, EditableTextarea, EditableInput, useEditableControls, Flex, ButtonGroup } from '@chakra-ui/react';
+import { CheckIcon, CloseIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import Fuse from 'fuse.js';
 import axios from 'axios';
 import LocationInput from './components/LocationInput';
@@ -18,7 +18,8 @@ function Plan() {
 
   const assistantMessage = location.state?.assistantMessage;
   const id = location.state?.id;
-  const itineraryName = location.state?.name;
+  const [itineraryName, setItineraryName] = useState(location.state?.name);
+  const itineraryNameExists = itineraryName != null;
 
   if (assistantMessage == null) {
     return <p>Error: Itinerary not generated</p>
@@ -47,6 +48,7 @@ function Plan() {
   const [changedTime, setChangedTime] = useState(null);
   const [changedEvent, setChangedEvent] = useState(null);
   const [changedLocation, setChangedLocation] = useState(null);
+  const [headingDisplay, setHeadingDisplay] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -342,7 +344,6 @@ function Plan() {
   };
 
   const handleSubmit = async () => {
-    const itinerary_name = itineraryName == null ? document.getElementById('planNameInput').value : itineraryName;
     const storedToken = localStorage.getItem('token');
   
     if (!storedToken) {
@@ -354,7 +355,7 @@ function Plan() {
       });
       return;
     }
-    if (!itinerary_name) {
+    if (!itineraryName) {
       toast({
         title: 'Error: Plan must have a name before saving',
         status: 'error',
@@ -365,18 +366,19 @@ function Plan() {
     }
   
     if (location.state?.image_url == null) {
+      const numPictures = 8;
       try {
         let config = {
           method: 'get',
           maxBodyLength: Infinity,
-          url: `https://api.pexels.com/v1/search?query=${uniqueLocations[0]}&orientation=square&per_page=20`,
+          url: `https://api.pexels.com/v1/search?query=${JSON.stringify(uniqueLocations[0])}&orientation=square&per_page=${numPictures}`,
           headers: {
             'Authorization': pexelsKey,
           }
         };
         axios.request(config)
           .then((response) => {
-            const randomIndex = Math.floor(Math.random() * Math.min(response.data.total_results, 20)) - 1;
+            const randomIndex = Math.floor(Math.random() * Math.min(response.data.total_results, numPictures)) - 1;
             // Get the original image URL from the randomly selected photo
             const image_url = response.data.photos[randomIndex].src.original;
       
@@ -387,7 +389,7 @@ function Plan() {
             axios.post('http://localhost:3003/create-itinerary', {
               token: storedToken,
               date_modified: new Date(),
-              itinerary_name: itinerary_name,
+              itinerary_name: itineraryName,
               plan: JSON.stringify(itinerary),
               image_url: image_url,
               locationsMapping: JSON.stringify(locationsMapping),
@@ -448,7 +450,7 @@ function Plan() {
         const response = await axios.post('http://localhost:3003/create-itinerary', {
           token: storedToken,
           date_modified: new Date(),
-          itinerary_name: itinerary_name,
+          itinerary_name: itineraryName,
           plan: JSON.stringify(itinerary),
           image_url: location.state?.image_url,
           locationsMapping: JSON.stringify(locationsMapping),
@@ -600,26 +602,67 @@ function Plan() {
     });
   }, [itinerary, editingBox, fuse, editingEvent, addingEvent]);
   
-  const heading = () => {
-    if (itineraryName == null) {
-      return <Input id="planNameInput" placeholder="Give your plan a name" />
+  const [editableContent, setEditableContent] = useState(() => {
+    if (itineraryNameExists == null) {
+      return <Input id="planNameInput" value={itineraryName} onChange={(e) => setItineraryName(e.target.value)} placeholder="Give your plan a name" />
     } else {
-      return <Text fontWeight="bold" fontSize="35px">{itineraryName}</Text>
+      function EditableControls() {
+        const {
+          isEditing,
+          getSubmitButtonProps,
+          getCancelButtonProps,
+          getEditButtonProps,
+        } = useEditableControls()
+
+        return isEditing ? (
+          <ButtonGroup margin='10px' justifyContent='center' size='sm'>
+            <IconButton icon={<CheckIcon />} {...getSubmitButtonProps()} />
+            <IconButton icon={<CloseIcon />} {...getCancelButtonProps()} />
+          </ButtonGroup>
+        ) : (
+          <Flex justifyContent='center'>
+            <IconButton margin='10px' size='sm' icon={<EditIcon />} {...getEditButtonProps()} />
+          </Flex>
+        )
+      }
+
+      return (
+        <Editable
+          textAlign='center'
+          defaultValue={itineraryName}
+          fontWeight='bold'
+          fontSize='35px'
+          isPreviewFocusable={false}
+          display='flex'
+          flexWrap='wrap'
+          onSubmit={(newItineraryName) => setItineraryName(newItineraryName)}
+        >
+          <EditablePreview />
+          {/* Here is the custom input */}
+          <Input as={EditableInput} marginTop='5px' />
+          <EditableControls />
+        </Editable>
+      )
     }
-  }
+  });
+
+  useEffect(() => {
+    setHeadingDisplay(editableContent)
+  }, [editableContent]);
   
   return (
     <div id="new-plan">
       <Bar />
       <MapWithMarkers destinations={locationsMapping} activeLocation={activeLocation} />
-      <Box display="flex" flexDir="column" padding="42px" position="fixed" top="12%" right="2%" width="42%" height="83%" borderWidth="3px" borderRadius="12px" overflow="scroll" bgColor="white">
+      <Box display="flex" flexDir="column" padding='32px 42px' position="fixed" top="12%" right="2%" width="42%" height="83%" borderWidth="3px" borderRadius="12px" overflow="scroll" bgColor="white">
         <Box display="flex" flexDir="row" justifyContent="space-between">
-          {heading()}
+          {editableContent}
           <Button
             mb={6}
             bg="#209fb5"
             padding="20px"
             onClick={handleSubmit}
+            marginTop='5px'
           >
             Save Itinerary
           </Button>

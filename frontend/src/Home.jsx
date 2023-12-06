@@ -282,19 +282,19 @@ function Home() {
   return (
     <div id="home">
       <Bar />
-      <Heading textAlign="center" color="#209fb5" fontSize="55px" position="absolute" top="90px" width="100%">
+      <Heading zIndex="-1" textAlign="center" color="#209fb5" fontSize="55px" position="absolute" top="90px" width="100%">
         Let's Plan Your Next Trip.
       </Heading>
-      <Box id="home-container" position="absolute" top="180px" width="100%" display="flex" flexDirection="column" justifyContent="space-between">
+      <Box id="home-container" paddingRight="3%" position="absolute" top="180px" width="100%" display="flex" flexDirection="row" justifyContent="center" flex="1">
         <Image
           src={home_cover2}
           alt="Home Image"
-          position="absolute"
-          left="5%"
-          width="800px"
-          zIndex="-1"
+          zIndex="1"
+          objectFit="contain"
+          height="80vh"
+          flex="1"
         />
-        <Flex id="home-main-right" position="absolute" top="" right="5%" flex="1" width="800px" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
+        <Flex id="home-main-right" flex="1" height="100%" border="3px solid #209fb5" borderRadius="18px" flexDirection="column">
           <Flex flexDirection="row" id="dates-input">
             <Flex flexDirection="column" flex="1" p={5}>
               <Text>First Day</Text>
