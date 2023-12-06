@@ -2,7 +2,21 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MapWithMarkers from './components/EmbededMap';
 import Bar from './components/Bar';
-import { Box, Button, Input, useToast, IconButton, Text, Editable, EditablePreview, EditableTextarea, EditableInput, useEditableControls, Flex, ButtonGroup } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Input,
+  useToast,
+  IconButton,
+  Text,
+  Editable,
+  EditablePreview,
+  EditableTextarea,
+  EditableInput,
+  useEditableControls,
+  Flex,
+  ButtonGroup,
+} from '@chakra-ui/react';
 import { CheckIcon, CloseIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import Fuse from 'fuse.js';
 import axios from 'axios';
@@ -291,7 +305,9 @@ function Plan() {
           updatedItinerary[dateInput] = updatedDate;
 
           if (Object.keys(updatedItinerary[dateInput]).length == 0) {
-            delete updatedItinerary[dateInput]
+            delete updatedItinerary[dateInput];
+            setSelectedDate(dateSplit);
+            console.log(selectedDate);
           }
           editedEvent = updatedItinerary[dateSplit][newTime];
         }
@@ -331,6 +347,7 @@ function Plan() {
 
     if (Object.keys(updatedItinerary[date]).length == 0) {
       delete updatedItinerary[date];
+      setSelectedDate(Object.keys(updatedItinerary)[0]);
     }
 
     // Update the state to trigger a re-render
@@ -486,11 +503,12 @@ function Plan() {
   const addDisplay = () => {
     if (addingEvent) {
       return (
-        <Box>
-          <Input type="datetime-local" value={changedTime} onChange={(e) => setChangedTime(e.target.value)} />
-          <Input placeholder="Event" value={changedEvent} onChange={(e) => setChangedEvent(e.target.value)} />
+        <Box borderRadius='12px' borderWidth='1px' padding='8px' marginTop='5px'>
+          <Input marginTop='8px' type="datetime-local" value={changedTime} onChange={(e) => setChangedTime(e.target.value)} />
+          <Input marginTop='8px' marginBottom='8px' placeholder="Event" value={changedEvent} onChange={(e) => setChangedEvent(e.target.value)} />
           <LocationInput value={changedLocation} onChange={(e) => setChangedLocation(e)} />
           <Button
+            marginTop='8px'
             mb={6}
             bg="#209fb5"
             onClick={() => {
@@ -511,10 +529,11 @@ function Plan() {
     if (editingEvent && editingBox && editingBox.date === date && editingBox.time === time) {
       return (
         <Box>
-          <Input type="datetime-local" value={changedTime} onChange={(e) => setChangedTime(e.target.value)} />
-          <Input placeholder="Event" value={changedEvent} onChange={(e) => setChangedEvent(e.target.value)} />
+          <Input marginTop='8px' type="datetime-local" value={changedTime} onChange={(e) => setChangedTime(e.target.value)} />
+          <Input marginTop='8px' marginBottom='8px' placeholder="Event" value={changedEvent} onChange={(e) => setChangedEvent(e.target.value)} />
           <LocationInput value={changedLocation} onChange={(e) => setChangedLocation(e)} />
           <Button
+            marginTop='8px'
             mb={6}
             bg="#209fb5"
             onClick={() => {
@@ -535,10 +554,16 @@ function Plan() {
 
   useEffect(() => {
     console.log(itinerary);
-  }, [itinerary])
+  }, [itinerary]);
+
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const sortedDates = Object.keys(itinerary).sort((a, b) => new Date(a) - new Date(b));
+    return sortedDates.length > 0 ? sortedDates[0] : null;
+  });
+  const [datesDisplay, setDatesDisplay] = useState(null);
 
   useEffect(() => {
-    setItineraryDisplay(() => {
+    setDatesDisplay(() => {
       const sortedDates = Object.keys(itinerary).sort((a, b) => new Date(a) - new Date(b));
       const sortedItinerary = {};
   
@@ -558,49 +583,77 @@ function Plan() {
       });
   
       return (
-        <Box>
+        <Box display='flex' justifyContent='space-evenly' flexWrap='wrap' marginTop='12px'>
           {sortedDates.map((date) => (
-            <div key={date}>
-              <Text marginTop="8px" marginBottom="8px">{date}</Text>
-              {Object.keys(sortedItinerary[date]).map((time) => (
-                <Box
-                  key={time}
-                  borderWidth="1px"
-                  borderRadius="12px"
-                  position="relative"
-                  _hover={{ bgColor: 'gray.100' }}
-                  style={{ cursor: "pointer" }}
-                  height="auto"
-                  onClick={(event) => handleLocationNameClick(sortedItinerary[date][time].location, event)}
-                >
-                  <h3>{time}</h3>
-                  <p>
-                    <strong>Event:</strong> {sortedItinerary[date][time].event}
-                  </p>
-                  <p>
-                    <strong>Location:</strong> {sortedItinerary[date][time].location}
-                  </p>
-                  <Box display="flex" flexDir="column" height="100%" justifyContent="space-between" position="absolute" top="0" right="0" p="2">
-                    <EditIcon
-                      color="orange"
-                      onClick={() => handleEditClick(date, time)}
-                      style={{ cursor: "pointer" }}
-                    />
-                    <DeleteIcon
-                      color="red"
-                      onClick={() => handleDeleteClick(date, time)}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </Box>
-                  {editDisplay(date, time)}
-                </Box>
-              ))}
-            </div>
+            <Box
+              padding='6px'
+              borderRadius='5px'
+              borderWidth='1px'
+              display='inline-block'
+              style={{ cursor: "pointer" }}
+              _hover={{ bgColor: date === selectedDate ? 'gray.500' : 'gray.100' }}
+              bgColor={date == selectedDate ? 'gray.500' : 'white'}
+              onClick={() => setSelectedDate(date)}
+            >
+              {date}
+            </Box>
           ))}
         </Box>
       );
     });
-  }, [itinerary, editingBox, fuse, editingEvent, addingEvent]);
+  }, [itinerary, selectedDate]);
+
+  useEffect(() => {
+    setItineraryDisplay(() => {
+      const sortedTimes = Object.keys(itinerary[selectedDate]).sort((a, b) => {
+        // Custom sorting function using 24-hour time format
+        const [hoursA, minutesA, periodA] = a.match(/(\d+):(\d+) ([APMapm]{2})/).slice(1);
+        const [hoursB, minutesB, periodB] = b.match(/(\d+):(\d+) ([APMapm]{2})/).slice(1);
+
+        // Convert to 24-hour format
+        const timeA = `${periodA.toUpperCase() === 'PM' ? parseInt(hoursA, 10) + 12 : hoursA}:${minutesA}`;
+        const timeB = `${periodB.toUpperCase() === 'PM' ? parseInt(hoursB, 10) + 12 : hoursB}:${minutesB}`;
+
+        return timeA.localeCompare(timeB);
+      });
+
+      return sortedTimes.map((time) => (
+        <Box
+          key={time}
+          borderWidth="1px"
+          borderRadius="12px"
+          marginTop='15px'
+          padding='8px'
+          position="relative"
+          _hover={{ bgColor: 'WhiteSmoke' }}
+          style={{ cursor: "pointer" }}
+          height="auto"
+          onClick={(event) => handleLocationNameClick(itinerary[selectedDate][time].location, event)}
+        >
+          <h3>{time}</h3>
+          <p>
+            <strong>Event:</strong> {itinerary[selectedDate][time].event}
+          </p>
+          <p>
+            <strong>Location:</strong> {itinerary[selectedDate][time].location}
+          </p>
+          <Box display="flex" flexDir="column" height="100%" justifyContent="space-between" position="absolute" top="0" right="0" p="2">
+            <EditIcon
+              color="orange"
+              onClick={() => handleEditClick(selectedDate, time)}
+              style={{ cursor: "pointer" }}
+            />
+            <DeleteIcon
+              color="red"
+              onClick={() => handleDeleteClick(selectedDate, time)}
+              style={{ cursor: "pointer" }}
+            />
+          </Box>
+          {editDisplay(selectedDate, time)}
+        </Box>
+      ));
+    });
+  }, [itinerary, editingBox, fuse, editingEvent, addingEvent, selectedDate, datesDisplay]);
   
   const [editableContent, setEditableContent] = useState(() => {
     if (itineraryNameExists == null) {
@@ -679,6 +732,7 @@ function Plan() {
           Add Event
         </Button>
         {addDisplay()}
+        {datesDisplay}
         {itineraryDisplay}
       </Box>
     </div>
