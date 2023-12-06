@@ -656,8 +656,8 @@ function Plan() {
   }, [itinerary, editingBox, fuse, editingEvent, addingEvent, selectedDate, datesDisplay]);
   
   const [editableContent, setEditableContent] = useState(() => {
-    if (itineraryNameExists == null) {
-      return <Input id="planNameInput" value={itineraryName} onChange={(e) => setItineraryName(e.target.value)} placeholder="Give your plan a name" />
+    if (!itineraryNameExists) {
+      return <Input marginTop='5px' id="planNameInput" value={itineraryName} onChange={(e) => setItineraryName(e.target.value)} placeholder="Give your plan a name" />
     } else {
       function EditableControls() {
         const {
