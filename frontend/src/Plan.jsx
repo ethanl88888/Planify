@@ -607,12 +607,14 @@ function Plan() {
     setItineraryDisplay(() => {
       const sortedTimes = Object.keys(itinerary[selectedDate]).sort((a, b) => {
         // Custom sorting function using 24-hour time format
+        const pad = (num) => num.toString().padStart(2, '0'); // Function to zero-pad a number
+
         const [hoursA, minutesA, periodA] = a.match(/(\d+):(\d+) ([APMapm]{2})/).slice(1);
         const [hoursB, minutesB, periodB] = b.match(/(\d+):(\d+) ([APMapm]{2})/).slice(1);
 
-        // Convert to 24-hour format
-        const timeA = `${periodA.toUpperCase() === 'PM' ? parseInt(hoursA, 10) + 12 : hoursA}:${minutesA}`;
-        const timeB = `${periodB.toUpperCase() === 'PM' ? parseInt(hoursB, 10) + 12 : hoursB}:${minutesB}`;
+        // Convert to 24-hour format and zero-pad hours and minutes
+        const timeA = `${periodA.toUpperCase() === 'PM' ? pad(parseInt(hoursA, 10) + 12) : pad(hoursA)}:${pad(minutesA)}`;
+        const timeB = `${periodB.toUpperCase() === 'PM' ? pad(parseInt(hoursB, 10) + 12) : pad(hoursB)}:${pad(minutesB)}`;
 
         return timeA.localeCompare(timeB);
       });

@@ -129,7 +129,7 @@ function Home() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (firstDay == null || lastDay == null || budget == null || numPeople == null || selectedActivities == null || destinations == null) {
       toast({
         title: 'Error: Please fill in all fields before submitting.',
@@ -161,58 +161,20 @@ function Home() {
         return; // Stop further processing if dateVisiting is not valid
       }
 
-      setIsLoading(true);
-      try {
-        const loadingMessages = [
-          'Generating plan...',
-          'Finding the best places...',
-          'Optimizing the route...',
-          'Considering budget constraints...',
-          'Making your trip more fun...',
-          'Exploring hidden gems...',
-          'Selecting top-notch accommodations...',
-          'Creating photo-worthy moments...',
-          'Assembling a diverse itinerary...',
-          'Navigating logistical challenges...',
-          'More loading text because I got no more ideas'
-        ];
-
-        let responseReceived = false;
-        // Function to display loading toast with different messages
-        const displayLoadingToast = (index) => {
-          if (!responseReceived) {
-            toast.closeAll();
-            toast({
-              title: loadingMessages[index],
-              status: 'loading',
-              duration: 6000,
-              isClosable: true,
-            });
-
-            if (index === loadingMessages.length - 1) {
-              index = -1;
-            }
-
-            setTimeout(() => {
-              displayLoadingToast(index + 1);
-            }, 6000);
-          }
-        };
-
-        displayLoadingToast(0);
-
+      async function makeChatGPTRequest(startDate, endDate) {
         const dataForGPT = `
           Guaranteed Planned Destinations With Dates (ignore id field): ${JSON.stringify(destinations)},
-          First Day of Overall Trip: ${firstDay},
-          Last Day of Overall Trip: ${lastDay},
+          First Day Trip Duration: ${startDate},
+          Last Day of Trip Duration: ${endDate},
           Overall Budget of Trip: ${budget},
           Number of People in this Trip: ${numPeople},
           General Activities Looking Forward to in this Trip: ${selectedActivities}
         `
 
         let inputForGPT = JSON.stringify({
+          // "model": "gpt-3.5-turbo",
           "model": "gpt-4-1106-preview",
-          "response_format": { "type": "json_object" },
+          // "response_format": { "type": "json_object" },
           "messages": [
             {
               "role": "system",
@@ -227,55 +189,158 @@ function Home() {
                           You are to go into detail for each activity's event field based on the general activities given to you in the user input.
                           For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
                           { "yyyy-mm-dd": { "hh:mm AM/PM": { "event": "Event description", "location": "street address, neighborhood, city, county, state, postcode, country" } }
-                          The event should be very descriptive, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
+                          Because I have divided each trip's overall duration into multiple time periods for multiple instances of you to respond to, you to ignore the First Day of Trip Duration and Last Day of Trip Duration in most scenarios. However, if the First Day of Trip Duration is ${firstDay}, you must include flight arrival on ${firstDay}. Likewise, if the Last Day of Trip Duration is ${lastDay}, you must include flight departure on ${lastDay}.
+                          Each event should be as descriptive as possible (at least 20 words excluding arrival and departure), but no more than 45 words, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
                           If you are unable to give the full address of a location, you can choose to cut out as much of the left portion of the location format. However, you must provide city, county, state, postcode, country as a bare minimum.
+                          You are to generate at most 3 or 4 times and their events per date.
                         `
             }
           ]
         });
 
-        let config = {
-          method: 'post',
-          maxBodyLength: Infinity,
-          url: 'https://api.openai.com/v1/chat/completions',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${chatGPTKey}`,
-          },
-          data: inputForGPT
-        };
+        try {
+          const response = await axios.request({
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: 'https://api.openai.com/v1/chat/completions',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${chatGPTKey}`,
+            },
+            data: inputForGPT
+          });
 
-        axios.request(config)
-        .then((response) => {
-          responseReceived = true;
-          toast.closeAll();
-          const assistantMessage = response.data.choices[0].message.content;
-          let modifiedAssistantMessage = '';
-          let useModified = false;
-
-          // Split the message into lines
-          const lines = assistantMessage.split('\n');
-          if (lines[0] == '```json') {
-            // Remove the first and last lines
-            modifiedAssistantMessage = lines.slice(1, -1).join('\n');
-            useModified = true;
-          }
-      
-          console.log(assistantMessage); // Log the modified message
-
-          // Update the state or perform any other actions with the modified message
-          setIsLoading(false);
-          navigate('/plan', { state: { assistantMessage: useModified ? modifiedAssistantMessage : assistantMessage } });
-        })
-        .catch((error) => {
-          console.log(error);
-
-          setIsLoading(false);
-        });
-      } catch (error) {
-        console.error('Error in handleSubmit:', error);
-        setIsLoading(false);
+          // Resolve the promise with the response data
+          return { quarter: `${startDate} to ${endDate}`, data: response.data };
+        } catch (error) {
+          // Reject the promise with the error
+          console.error(error);
+          throw error;
+        }
       }
+
+      async function fetchDataForQuarters() {
+        setIsLoading(true);
+        const [startYear, startMonth, startDay] = firstDay.split('-');
+        const [endYear, endMonth, endDay] = lastDay.split('-');
+
+        const tripStartDate = new Date(Date.UTC(startYear, startMonth - 1, startDay, 0, 0, 0));
+        const tripEndDate = new Date(Date.UTC(endYear, endMonth - 1, endDay, 0, 0, 0));
+
+        // Handle invalid dates
+        if (isNaN(tripStartDate.getTime()) || isNaN(tripEndDate.getTime())) {
+          setIsLoading(false);
+          console.error('Error: Invalid date format.');
+          return;
+        }
+
+        const tripLength = Math.ceil((tripEndDate - tripStartDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        const quarters = tripLength < 3 ? tripLength : 3;
+        const quarterLength = Math.max(Math.ceil(tripLength / quarters), 1);
+
+        const promises = [];
+        let currentStartDate = new Date(tripStartDate); // Create a new Date object to avoid mutation
+
+        for (let i = 0; i < quarters; i++) {
+          const currentEndDate = new Date(currentStartDate);
+          currentEndDate.setDate(currentEndDate.getDate() + quarterLength - 1);
+
+          // Handle the case where the currentEndDate exceeds the tripEndDate
+          if (currentEndDate > tripEndDate) {
+            currentEndDate.setDate(tripEndDate.getDate());
+          }
+
+          promises.push(makeChatGPTRequest(currentStartDate.toISOString().split('T')[0], currentEndDate.toISOString().split('T')[0]));
+
+          // Set the new currentStartDate to the day after the currentEndDate
+          currentStartDate = new Date(currentEndDate);
+          currentStartDate.setDate(currentStartDate.getDate() + 1);
+        }
+
+        try {
+          // Wait for all requests to complete
+          const responses = await Promise.all(promises);
+
+          // Initialize combinedData as an empty object
+          const combinedData = {};
+
+          // Iterate over each response
+          responses.forEach(response => {
+            const { quarter, data } = response;
+            const lines = data.choices[0].message.content.split('\n');
+            const quarterAssistantMessage = lines[0] == '```json' ? lines.slice(1, -1).join('\n') : data.choices[0].message.content;
+            const quarterItinerary = JSON.parse(quarterAssistantMessage);
+
+            const quarterStartStr = quarter.split(' to ')[0];
+            const quarterEndStr = quarter.split(' to ')[1];
+            const [quarterStartYear, quarterStartMonth, quarterStartDay] = quarterStartStr.split('-');
+            const [quarterEndYear, quarterEndMonth, quarterEndDay] = quarterEndStr.split('-');
+
+            const quarterStart = new Date(Date.UTC(quarterStartYear, quarterStartMonth - 1, quarterStartDay, 0, 0, 0));
+            const quarterEnd = new Date(Date.UTC(quarterEndYear, quarterEndMonth - 1, quarterEndDay, 0, 0, 0));
+            const dateRange = [];
+            while (quarterStart <= quarterEnd) {
+              dateRange.push(new Date(quarterStart));
+              quarterStart.setDate(quarterStart.getDate() + 1);
+            }
+
+            dateRange.forEach(date => {
+              const dateStr = date.toISOString().split('T')[0];
+              combinedData[dateStr] = quarterItinerary[dateStr];
+            });
+          });
+
+          // Do something with the combined data (e.g., setIsLoading(false), navigation)
+          return(JSON.stringify(combinedData));
+        } catch (error) {
+          // Handle errors
+          console.error('Error fetching data:', error);
+          // Handle error state (e.g., setIsLoading(false), show error message)
+        }
+      }
+      const loadingMessages = [
+        'Generating plan...',
+        'Finding the best places...',
+        'Optimizing the route...',
+        'Considering budget constraints...',
+        'Making your trip more fun...',
+        'Exploring hidden gems...',
+        'Selecting top-notch accommodations...',
+        'Creating photo-worthy moments...',
+        'Assembling a diverse itinerary...',
+        'Navigating logistical challenges...',
+        'More loading text because I got no more ideas'
+      ];
+
+      let responseReceived = false;
+      // Function to display loading toast with different messages
+      const displayLoadingToast = (index) => {
+        if (!responseReceived) {
+          toast.closeAll();
+          toast({
+            title: loadingMessages[index],
+            status: 'loading',
+            duration: 6000,
+            isClosable: true,
+          });
+
+          if (index === loadingMessages.length - 1) {
+            index = -1;
+          }
+
+          setTimeout(() => {
+            displayLoadingToast(index + 1);
+          }, 6000);
+        }
+      };
+
+      displayLoadingToast(0);
+      const assistantMessage = await fetchDataForQuarters();
+      responseReceived = true;
+      toast.closeAll();
+      setIsLoading(false);
+      navigate('/plan', { state: { assistantMessage: assistantMessage } });
     }
   };
 
@@ -376,7 +441,7 @@ function Home() {
               onClick={handleSubmit}
               isLoading={isLoading}
             >
-              {isLoading ? 'Loading' : 'Submit Itinerary'}
+              {isLoading ? 'Loading' : 'Generate Itinerary'}
             </Button>
           </Flex>
         </Flex>
