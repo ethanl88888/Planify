@@ -190,7 +190,7 @@ function Home() {
                           For example, this would be part of an output where the user input's number of people is one and a general activity is culinary tours.
                           { "yyyy-mm-dd": { "hh:mm AM/PM": { "event": "Event description", "location": "street address, neighborhood, city, county, state, postcode, country" } }
                           Because I have divided each trip's overall duration into multiple time periods for multiple instances of you to respond to, you to ignore the First Day of Trip Duration and Last Day of Trip Duration in most scenarios. However, if the First Day of Trip Duration is ${firstDay}, you must include flight arrival on ${firstDay}. Likewise, if the Last Day of Trip Duration is ${lastDay}, you must include flight departure on ${lastDay}.
-                          Each event should be as descriptive as possible (at least 20 words excluding arrival and departure), but no more than 45 words, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
+                          Each event should be as descriptive as possible (at least 15 words excluding arrival and departure), but no more than 40 words, and the location should follow the following format: street address, neighborhood, city, county, state, postcode, country.
                           If you are unable to give the full address of a location, you can choose to cut out as much of the left portion of the location format. However, you must provide city, county, state, postcode, country as a bare minimum.
                           You are to generate at most 3 or 4 times and their events per date.
                         `
@@ -236,7 +236,7 @@ function Home() {
 
         const tripLength = Math.ceil((tripEndDate - tripStartDate) / (1000 * 60 * 60 * 24)) + 1;
 
-        const quarters = tripLength < 3 ? tripLength : 3;
+        const quarters = tripLength < 4 ? tripLength : 4;
         const quarterLength = Math.max(Math.ceil(tripLength / quarters), 1);
 
         const promises = [];
